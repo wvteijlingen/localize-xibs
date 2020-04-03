@@ -6,10 +6,7 @@ import PackageDescription
 let package = Package(
     name: "LocalizeXib",
     products: [
-        // Products define the executables and libraries produced by a package, and make them visible to other packages.
-        .library(
-            name: "localize-xibs",
-            targets: ["LocalizeXib"]),
+        .executable(name: "localize-xibs", targets: ["LocalizeXib"]),
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser", .upToNextMinor(from: "0.0.1")),
