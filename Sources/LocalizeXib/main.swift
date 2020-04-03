@@ -28,7 +28,7 @@ struct Localize: ParsableCommand {
         }
 
         for source in translationSources {
-            print("Found translations for locale \(source.locale.green) at \(source.filePath.path.green)")
+            print("Found \(source.language.blue) translations at \(source.filePath.path.blue)")
 
 //            if verbose {
 //                print(source.description)
@@ -63,11 +63,8 @@ struct Localize: ParsableCommand {
     }
 
     private func logIssue(_ message: String, strict: Bool) {
-        if strict {
-            print("error: \(message)")
-        } else {
-            print("warning: \(message)")
-        }
+        let prefix = strict ? "error".red : "warning".yellow
+        print("\(prefix): \(message)")
     }
 }
 

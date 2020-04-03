@@ -21,6 +21,9 @@ struct TranslationSource: CustomStringConvertible {
     let filePath: URL
     let locale: String
     let translations: [String: String]
+    var language: String {
+        Locale(identifier: "en").localizedString(forLanguageCode: locale) ?? locale
+    }
 
     init(filePath: String) throws {
         let pathURL = URL(fileURLWithPath: filePath)
