@@ -27,15 +27,15 @@ mint install wvteijlingen/localize-xibs
 ## Usage
 
 1. Add all your translations in centralized `.strings` files in your project, for example:
-   - `MyProject/Resources/en.lproj/Translations.strings`
-   - `MyProject/Resources/de.lproj/Translations.strings`.
+   - `MyProject/Resources/en.lproj/Localizable.strings`
+   - `MyProject/Resources/de.lproj/Localizable.strings`.
 1. In the Xcode file inspector, configure your XIBs and Storyboards to be localized using "Localizable Strings".
 1. Wherever you normally enter text using Interface Builder, you can reference your translation using:
    `t:my_translation_key`.
 1. In the root of your project run `localize-xibs`, passing it a list of all your centralized translation files. For example:
 
    ```
-   localize-xibs MyProject/Resources/en.lproj/Translations.strings MyProject/Resources/de.lproj/Translations.strings
+   localize-xibs MyProject/Resources/en.lproj/Localizable.strings MyProject/Resources/de.lproj/Localizable.strings
    ```
 
 ## Usage as an Xcode Run Script
@@ -47,7 +47,7 @@ Simply add a `Run Script` phase with the localize-xibs command, optionally using
 For example:
 
 ```
-localize-xibs MyProject/Resources/en.lproj/Translations.strings MyProject/Resources/de.lproj/Translations.strings --strict
+localize-xibs MyProject/Resources/en.lproj/Localizable.strings MyProject/Resources/de.lproj/Localizable.strings --strict
 ```
 
 ## Command line API
