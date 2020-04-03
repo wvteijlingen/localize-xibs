@@ -33,7 +33,10 @@ mint install wvteijlingen/localize-xibs
 1. Wherever you normally enter text using Interface Builder, you can reference your translation using:
    `t:my_translation_key`.
 1. In the root of your project run `localize-xibs`, passing it a list of all your centralized translation files. For example:
-   `localize-xibs MyProject/Resources/en.lproj/Translations.strings MyProject/Resources/de.lproj/Translations.strings`
+
+   ```
+   localize-xibs MyProject/Resources/en.lproj/Translations.strings MyProject/Resources/de.lproj/Translations.strings
+   ```
 
 ## Usage as an Xcode Run Script
 
