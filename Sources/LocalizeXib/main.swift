@@ -2,6 +2,8 @@ import ArgumentParser
 import PathKit
 import Rainbow
 
+var hasError = false
+
 struct Localize: ParsableCommand {
     @Flag(help: "Treat warnings as errors.")
     var strict: Bool
@@ -12,10 +14,16 @@ struct Localize: ParsableCommand {
     @Argument(help: "List of .strings files containing the translations.")
     var inputFiles: [String]
 
+    func validate() throws {
+        if inputFiles.isEmpty {
+            throw Error.noInputsSpecified
+        }
+    }
+
     func run() throws {
-        let translationSources = inputFiles.compactMap { (filePath) -> TranslationSource? in
+        let translationSources = inputFiles.compactMap { (filePath) -> StringsFile? in
             do {
-                return try TranslationSource(filePath: filePath)
+                return try StringsFile(filePath: filePath)
             } catch {
                 switch error {
                 case Error.inputFileNotLocalized:
@@ -30,11 +38,9 @@ struct Localize: ParsableCommand {
         for source in translationSources {
             print("Found \(source.language.blue) translations at \(source.filePath.path.blue)")
 
-//            if verbose {
-//                print(source.description)
-//            }
-
-            let xibs = Path.glob("./**/Base.lproj/*.{xib,storyboard}").map { OutputXib(filePath: $0.url) }
+            let xibs = Path.glob("./**/Base.lproj/*.{xib,storyboard}").compactMap {
+                try? InterfaceBuilderFile(filePath: $0.string)
+            }
 
             for xib in xibs {
                 guard let outputFile = xib.stringsFile(withLocale: source.locale) else { continue }
@@ -47,10 +53,10 @@ struct Localize: ParsableCommand {
 
                 DefaultShell.run("ibtool \(xib.filePath.path) --generate-strings-file \(outputFile.filePath.path)", printCommand: verbose)
 
-                let result = try! outputFile.update(withTranslations: source.translations)
+                let result = try! outputFile.update(withReplacements: source.keysAndValues())
 
                 for key in result.unknownKeys {
-                    self.logIssue("Unknown translation for \"\(key)\"", strict: self.strict)
+                    logIssue("Unknown translation for \"\(key)\"", strict: strict)
                 }
 
                 if verbose {
@@ -60,10 +66,20 @@ struct Localize: ParsableCommand {
                 }
             }
         }
+
+        if hasError {
+            Self.exit(withError: Error.generic)
+        }
     }
 
     private func logIssue(_ message: String, strict: Bool) {
-        let prefix = strict ? "error".red : "warning".yellow
+        let prefix: String
+        if strict {
+            hasError = true
+            prefix = "error".red
+        } else {
+            prefix = "warning".yellow
+        }
         print("\(prefix): \(message)")
     }
 }

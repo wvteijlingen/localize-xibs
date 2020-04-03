@@ -1,5 +1,5 @@
-import XCTest
 @testable import LocalizeXib
+import XCTest
 
 final class LocalizeXibTests: XCTestCase {
     func testExample() {
