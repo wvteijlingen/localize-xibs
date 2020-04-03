@@ -34,22 +34,6 @@ struct TranslationSource: CustomStringConvertible {
         self.filePath = pathURL
         self.locale = pathURL.deletingLastPathComponent().deletingPathExtension().lastPathComponent
         self.translations = try stringsFile.keysAndValues()
-//
-//        let data = try! String(contentsOf: pathURL, encoding: .utf16LittleEndian)
-//        let lines = data.components(separatedBy: .newlines)
-//        let keysWithValues: [(String, String)] = lines.compactMap { line in
-//            // https://whatdidilearn.info/2018/07/29/how-to-capture-regex-group-values-in-swift.html
-//            guard
-//                let regex = try? NSRegularExpression(pattern: #""(.+)" = "(.*)";"#),
-//                let match = regex.firstMatch(in: line, options: [], range: NSRange(location: 0, length: line.utf16.count)),
-//                let keyRange = Range(match.range(at: 1), in: line),
-//                let valueRange = Range(match.range(at: 2), in: line)
-//            else {
-//                return nil
-//            }
-//
-//            return (String(line[keyRange]), String(line[valueRange]))
-//        }
     }
 
     var description: String {
@@ -140,34 +124,3 @@ struct StringsFile {
         return updateResult
     }
 }
-
-//struct LocalizeOperation {
-//    let xibFile: URL
-//    let translations: TranslationSource
-//
-//    func run() throws {
-//        let locale = translationsFile.deletingLastPathComponent().deletingPathExtension().lastPathComponent
-//        let xibName = xibFile.deletingPathExtension().lastPathComponent
-//        let xibDirectory = xibFile.deletingLastPathComponent()
-//
-//        guard xibDirectory.lastPathComponent.hasSuffix(".lproj") else {
-//            throw Error.outputFileNotFound
-//        }
-//
-//        let outputFile = xibDirectory
-//            .deletingLastPathComponent()
-//            .appendingPathComponent("\(locale).lproj")
-//            .appendingPathComponent("\(xibName).strings")
-//
-//        writeTranslations(loadTranslations(fromFile: translationsFile), toFile: outputFile)
-//    }
-//
-//    private func loadTranslations(fromFile: URL) ->  [String: String] {
-//        return [:]
-//    }
-//
-//    private func writeTranslations(_ translations: [String: String], toFile: URL) {
-////        DefaultShell().run("xcrun ibtool \(xibOrStoryboardFile) --generate-strings-file \(outputFile)")
-//
-//    }
-//}
