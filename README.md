@@ -46,5 +46,5 @@ localize-xibs MyProject/Resources/en.lproj/Translations.strings MyProject/Resour
 localize-xibs [--strict] [--verbose] [<input-files> ...]
 ```
 
-- `--strict`: Treat warnings as errors. 
+- `--strict`: Treat warnings as errors. This will throw compilation errors when ran from an Xcode Run Script.
 - `--verbose`: Display extra information while processing.
