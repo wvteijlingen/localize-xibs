@@ -1,3 +1,10 @@
+<p align="center">
+    <a href="#installation">Installation</a>
+  • <a href="#usage">Usage</a>
+  • <a href="#usage-as-an-xcode-run-script">Usage as an Xcode Run Script</a>
+  • <a href="#command-line-api">Command line</a>
+</p>
+
 # LocalizeXIBs
 
 LocalizeXIBs takes the pain out of localizing XIBs and Storyboards, by allowing you to **reference translations directly from Interface Builder**. This means no more dealing with `.strings` files that get out of sync, Object IDs, and missing translations.
@@ -11,7 +18,7 @@ LocalizeXIBs takes the pain out of localizing XIBs and Storyboards, by allowing 
 
 The biggest problem with the default way of localizing XIBs and Storyboards, is that you have to reference your views from your translation files by Interface Builder Object IDs. LocalizeXIBs flips this around, and allows you to reference your translations from your IB files. This makes for a much better workflow.
 
-## Installation with mint
+## Installation
 
 ```
 mint install wvteijlingen/localize-xibs
