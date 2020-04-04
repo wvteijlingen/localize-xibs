@@ -35,7 +35,9 @@ mint install wvteijlingen/localize-xibs
 1. In the root of your project run `localize-xibs`, passing it a list of all your centralized translation files. For example:
 
    ```
-   localize-xibs MyProject/Resources/en.lproj/Localizable.strings MyProject/Resources/de.lproj/Localizable.strings
+   localize-xibs \
+     MyProject/Resources/en.lproj/Localizable.strings \
+     MyProject/Resources/de.lproj/Localizable.strings
    ```
 
 ## Usage as an Xcode Run Script
@@ -47,7 +49,9 @@ Simply add a `Run Script` phase with the localize-xibs command, optionally using
 For example:
 
 ```
-localize-xibs MyProject/Resources/en.lproj/Localizable.strings MyProject/Resources/de.lproj/Localizable.strings --strict
+localize-xibs \
+  MyProject/Resources/en.lproj/Localizable.strings \
+  MyProject/Resources/de.lproj/Localizable.strings --strict
 ```
 
 ## Command line API
