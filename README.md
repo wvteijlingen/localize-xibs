@@ -20,7 +20,7 @@ The biggest problem with the default way of localizing XIBs and Storyboards, is 
 
 ## Installation
 
-```
+```bash
 mint install wvteijlingen/localize-xibs
 ```
 
@@ -34,7 +34,7 @@ mint install wvteijlingen/localize-xibs
    `t:my_translation_key`.
 1. In the root of your project run `localize-xibs`, passing it a list of all your centralized translation files. For example:
 
-   ```
+   ```bash
    localize-xibs \
      MyProject/Resources/en.lproj/Localizable.strings \
      MyProject/Resources/de.lproj/Localizable.strings
@@ -48,7 +48,7 @@ Simply add a `Run Script` phase with the localize-xibs command, optionally using
 
 For example:
 
-```
+```bash
 localize-xibs \
   MyProject/Resources/en.lproj/Localizable.strings \
   MyProject/Resources/de.lproj/Localizable.strings --strict
