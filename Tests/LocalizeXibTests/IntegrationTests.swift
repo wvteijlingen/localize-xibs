@@ -3,19 +3,21 @@ import PathKit
 
 final class IntegrationTests: XCTestCase {
     static var allTests = [
-        ("test_integration", test_integration)
+        ("test_happyPath", test_happyPath)
     ]
 
-    var testDirectory: String!
+    var testDirectory: Path!
 
     override func setUp() {
         let tempDirectory = try! Path.uniqueTemporary()
-        testDirectory = tempDirectory + "Fixtures"
+        let testDirectory = tempDirectory + "Fixtures"
         let fixtures = Path.current + "Tests" + "Fixtures"
         try! fixtures.copy(testDirectory)
+        self.testDirectory = testDirectory
+        print("Test directory: \(testDirectory)")
     }
 
-    func test_integration() throws {
+    func test_happyPath() throws {
         // Some of the APIs that we use below are available in macOS 10.13 and above.
         guard #available(macOS 10.13, *) else {
             return
@@ -23,27 +25,43 @@ final class IntegrationTests: XCTestCase {
 
         // Make the temp directory the current working directory
         let fileManager = FileManager.default
-        fileManager.changeCurrentDirectoryPath(testDirectory.path)
+        fileManager.changeCurrentDirectoryPath(testDirectory.string)
 
         let process = Process()
         process.executableURL = productsDirectory.appendingPathComponent("localize-xibs")
         process.arguments = ["./en.lproj/Localizable.strings", "./nl.lproj/Localizable.strings"]
 
-        let pipe = Pipe()
-        process.standardOutput = pipe
-
         try process.run()
         process.waitUntilExit()
 
-        let data = pipe.fileHandleForReading.readDataToEndOfFile()
-        let output = String(data: data, encoding: .utf8)
+        XCTAssertEqual(
+            try! String(contentsOfFile: (testDirectory + "en.lproj/Main.strings").string),
+            """
 
-        print(output)
+            /* Class = "UIButton"; normalTitle = "t:button"; ObjectID = "TTJ-tj-MN7"; */
+            "TTJ-tj-MN7.normalTitle" = "This is the button title";
 
-//        XCTAssertEqual(output, "Hello, world!\n")
+            /* Class = "UILabel"; text = "t:title"; ObjectID = "bcg-Rc-DAi"; */
+            "bcg-Rc-DAi.text" = "Welcome to localize-xibs";
+
+            """
+        )
+
+        XCTAssertEqual(
+            try! String(contentsOfFile: (testDirectory + "nl.lproj/Main.strings").string),
+            """
+
+            /* Class = "UIButton"; normalTitle = "t:button"; ObjectID = "TTJ-tj-MN7"; */
+            "TTJ-tj-MN7.normalTitle" = "De is de knoptitel";
+
+            /* Class = "UILabel"; text = "t:title"; ObjectID = "bcg-Rc-DAi"; */
+            "bcg-Rc-DAi.text" = "Welkom bij localize-xibs";
+
+            """
+        )
     }
 
-    /// Returns path to the built products directory.
+    /// Returns the path to the built products directory.
     var productsDirectory: URL {
       #if os(macOS)
         for bundle in Bundle.allBundles where bundle.bundlePath.hasSuffix(".xctest") {

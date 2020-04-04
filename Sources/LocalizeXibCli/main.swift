@@ -24,7 +24,13 @@ struct Localize: ParsableCommand {
     }
 
     func run() throws {
-        let xibFiles = Path.glob("./**/Base.lproj/*.{xib,storyboard}").map(\.string)
+        let xibFiles = Path.glob(".{,**}/Base.lproj/*.{xib,storyboard}").map(\.string)
+
+        guard !xibFiles.isEmpty else {
+            print("No localizable XIBs or Storyboards were found.")
+            return
+        }
+
         let localizer = LocalizeXibCore.Localizer(translationFiles: inputFiles, xibFiles: xibFiles)
         let success = localizer.localize(strict: strict, verbose: verbose)
 
