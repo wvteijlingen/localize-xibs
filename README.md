@@ -49,9 +49,9 @@ Simply add a `Run Script` phase with the localize-xibs command, optionally using
 For example:
 
 ```bash
-localize-xibs \
+localize-xibs --strict \
   MyProject/Resources/en.lproj/Localizable.strings \
-  MyProject/Resources/de.lproj/Localizable.strings --strict
+  MyProject/Resources/de.lproj/Localizable.strings
 ```
 
 ## Command line API
