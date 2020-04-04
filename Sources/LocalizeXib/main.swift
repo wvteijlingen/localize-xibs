@@ -3,6 +3,7 @@ import PathKit
 import Rainbow
 
 var hasError = false
+var fileSystem: FileSystemProtocol = FileSystem()
 
 struct Localize: ParsableCommand {
     @Flag(help: "Treat warnings as errors.")
@@ -23,10 +24,10 @@ struct Localize: ParsableCommand {
     func run() throws {
         let translationSources = inputFiles.compactMap { (filePath) -> StringsFile? in
             do {
-                return try StringsFile(filePath: filePath)
+                return try StringsFile(filePath: filePath, fileSystem: fileSystem)
             } catch {
                 switch error {
-                case Error.inputFileNotLocalized:
+                case Error.fileNotLocalized:
                     logIssue("\(filePath) is not located in an .lproj directory, skipping", strict: strict)
                 default:
                     print(error)
@@ -35,23 +36,23 @@ struct Localize: ParsableCommand {
             return nil
         }
 
-        for source in translationSources {
-            print("Found \(source.language.blue) translations at \(source.filePath.path.blue)")
+        let xibs = fileSystem.glob("./**/Base.lproj/*.{xib,storyboard}").compactMap {
+            try? InterfaceBuilderFile(filePath: $0, fileSystem: fileSystem)
+        }
 
-            let xibs = Path.glob("./**/Base.lproj/*.{xib,storyboard}").compactMap {
-                try? InterfaceBuilderFile(filePath: $0.string)
-            }
+        for source in translationSources {
+            print("Found \(source.language.blue) translations at \(source.filePath.blue)")
 
             for xib in xibs {
                 guard let outputFile = xib.stringsFile(withLocale: source.locale) else { continue }
 
                 if verbose {
-                    print("Updating \(outputFile.filePath.path.green) with translations from \(source.filePath.path)")
+                    print("Updating \(outputFile.filePath.green) with translations from \(source.filePath)")
                 } else {
                     print("Updating \(xib.nameAndExtension.green)")
                 }
 
-                DefaultShell.run("ibtool \(xib.filePath.path) --generate-strings-file \(outputFile.filePath.path)", printCommand: verbose)
+                DefaultShell.run("ibtool \(xib.filePath) --generate-strings-file \(outputFile.filePath)", printCommand: verbose)
 
                 let result = try! outputFile.update(withReplacements: source.keysAndValues())
 

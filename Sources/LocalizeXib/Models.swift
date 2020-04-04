@@ -1,15 +1,19 @@
 @_implementationOnly import Foundation
 
-enum Error: Swift.Error {
+private extension String {
+    var fileURL: URL { URL(fileURLWithPath: self) }
+}
+
+public enum Error: Swift.Error {
     case generic
-    case inputFileNotLocalized
+    case fileNotLocalized
     case noInputsSpecified
 }
 
 /// A file that is localized by Xcode and sits inside an *.lproj directory.
 protocol LocalizedFile {
     /// The path to the file.
-    var filePath: URL { get }
+    var filePath: String { get }
 
     /// The locale's language code of the file's contents, as derived from the .lproj directory name.
     var locale: String { get }
@@ -27,28 +31,30 @@ protocol LocalizedFile {
 
 extension LocalizedFile {
     var locale: String {
-        filePath.deletingLastPathComponent().deletingPathExtension().lastPathComponent
+        filePath.fileURL.deletingLastPathComponent().deletingPathExtension().lastPathComponent
     }
     var language: String {
         Locale(identifier: "en").localizedString(forLanguageCode: locale) ?? locale
     }
     var name: String {
-        filePath.deletingPathExtension().lastPathComponent
+        filePath.fileURL.deletingPathExtension().lastPathComponent
     }
     var nameAndExtension: String {
-        filePath.lastPathComponent
+        filePath.fileURL.lastPathComponent
     }
 }
 
 /// A XIB or Storyboard file.
 struct InterfaceBuilderFile: LocalizedFile {
-    let filePath: URL
+    let filePath: String
+    let fileSystem: FileSystemProtocol
 
-    init(filePath: String) throws {
-        self.filePath = URL(fileURLWithPath: filePath)
-        guard self.filePath.deletingLastPathComponent().lastPathComponent.hasSuffix(".lproj") else {
-            throw Error.inputFileNotLocalized
+    init(filePath: String, fileSystem: FileSystemProtocol) throws {
+        guard filePath.fileURL.deletingLastPathComponent().lastPathComponent.hasSuffix(".lproj") else {
+            throw Error.fileNotLocalized
         }
+        self.filePath = filePath
+        self.fileSystem = fileSystem
     }
 
     /// The .strings file for the given locale belonging to this file, or nil if no such file exists.
@@ -58,31 +64,34 @@ struct InterfaceBuilderFile: LocalizedFile {
     /// representing `Root/nl.lproj/Main.strings` if such a file exists.
     func stringsFile(withLocale locale: String) -> StringsFile? {
         let path = filePath
+            .fileURL
             .deletingLastPathComponent()
             .deletingLastPathComponent()
             .appendingPathComponent("\(locale).lproj")
             .appendingPathComponent("\(name).strings")
 
-        guard FileManager.default.fileExists(atPath: path.path) else { return nil }
+        guard fileSystem.fileExists(atPath: path.path) else { return nil }
 
-        return try? StringsFile(filePath: path.path)
+        return try? StringsFile(filePath: path.path, fileSystem: fileSystem)
     }
 }
 
 /// A .strings file.
 struct StringsFile: LocalizedFile {
-    let filePath: URL
+    let filePath: String
+    let fileSystem: FileSystemProtocol
 
-    init(filePath: String) throws {
-        self.filePath = URL(fileURLWithPath: filePath)
-        guard self.filePath.deletingLastPathComponent().lastPathComponent.hasSuffix(".lproj") else {
-            throw Error.inputFileNotLocalized
+    init(filePath: String, fileSystem: FileSystemProtocol) throws {
+        guard filePath.fileURL.deletingLastPathComponent().lastPathComponent.hasSuffix(".lproj") else {
+            throw Error.fileNotLocalized
         }
+        self.filePath = filePath
+        self.fileSystem = fileSystem
     }
 
     /// All keys and values in this file.
     func keysAndValues() throws -> [String: String] {
-        let data = try String(contentsOf: filePath)
+        let data = try String(contentsOfFile: filePath)
         let lines = data.components(separatedBy: .newlines)
         let keysWithValues: [(String, String)] = lines.compactMap { line in
             // https://whatdidilearn.info/2018/07/29/how-to-capture-regex-group-values-in-swift.html
@@ -103,8 +112,8 @@ struct StringsFile: LocalizedFile {
     /// Updates the file by replacing the given values with their replacements.
     /// - note: The keys in the replacements dictionary are not the keys in the .strings file,
     ///         but the existing values in the .strings file.
-    func update(withReplacements replacements: [String: String]) throws -> UpdateResult {
-        let data = try! String(contentsOf: filePath)
+    @discardableResult func update(withReplacements replacements: [String: String]) throws -> UpdateResult {
+        let data = try String(contentsOfFile: filePath)
         let inputLines = data.components(separatedBy: .newlines)
 
         var updateResult = UpdateResult()
@@ -133,7 +142,7 @@ struct StringsFile: LocalizedFile {
             }
         }
 
-        try outputLines.joined(separator: "\n").write(to: filePath, atomically: true, encoding: .utf8)
+        try outputLines.joined(separator: "\n").write(toFile: filePath, atomically: true, encoding: .utf8)
 
         return updateResult
     }

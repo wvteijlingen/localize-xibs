@@ -3,5 +3,7 @@ import XCTest
 import LocalizeXibTests
 
 var tests = [XCTestCaseEntry]()
-tests += LocalizeXibTests.allTests()
+tests += InterfaceBuilderFileTests.allTests()
+tests += StringsFileTests.allTests()
+tests += UpdateResultTests.allTests()
 XCTMain(tests)
