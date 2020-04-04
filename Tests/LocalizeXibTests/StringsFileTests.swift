@@ -1,12 +1,12 @@
-@testable import LocalizeXib
+@testable import LocalizeXibCore
 import XCTest
 
 class StringsFileTests: XCTestCase {
     static var allTests = [
         ("test_init_throwsErrorWhenFileIsNotInLprojDirectory", test_init_throwsErrorWhenFileIsNotInLprojDirectory),
         ("test_keysAndValues_parsesAllKeysAndValuesFromTheFile", test_keysAndValues_parsesAllKeysAndValuesFromTheFile),
-        ("test_update_updatesValueswithReplacements", test_update_updatesValueswithReplacements),
-        ("test_update_leavesValuesWithoutReplacements", test_update_leavesValuesWithoutReplacements),
+        ("test_update_updatesValuesWithReplacements", test_update_updatesValuesWithReplacements),
+        ("test_update_marksValuesWithoutReplacements", test_update_marksValuesWithoutReplacements),
         ("test_update_returnsAnUpdateResult", test_update_returnsAnUpdateResult),
     ]
 
@@ -16,19 +16,22 @@ class StringsFileTests: XCTestCase {
         super.setUp()
 
         fs = MockFileSystem()
-        fs.addFile(path: "en.lproj/Localizable.strings", contents:
+        fs.addFile(path: "/en.lproj/Localizable.strings", contents:
             """
-            /* A comment */
-            "key1" = "Foo";
+            /* First comment */
+            "key1" = "t:foo";
 
-            /* Another comment */
-            "key2" = "Bar";
+            /* Second comment */
+            "key2" = "t:bar";
+
+            /* Third comment */
+            "key3" = "bar";
             """
         )
     }
 
     func test_init_throwsErrorWhenFileIsNotInLprojDirectory() {
-        XCTAssertThrowsError(try StringsFile(filePath: "Localizable.strings", fileSystem: fs)) { error in
+        XCTAssertThrowsError(try StringsFile(filePath: "/Localizable.strings", fileSystem: fs)) { error in
 //            guard let error = error as? Error.fileNotLocalized else {
 //                XCTFail()
 //            }
@@ -36,49 +39,55 @@ class StringsFileTests: XCTestCase {
     }
 
     func test_keysAndValues_parsesAllKeysAndValuesFromTheFile() {
-        let file = try! StringsFile(filePath: "en.lproj/Localizable.strings", fileSystem: fs)
+        let file = try! StringsFile(filePath: "/en.lproj/Localizable.strings", fileSystem: fs)
         let actual = try? file.keysAndValues()
-        let expected = ["key1": "Foo", "key2": "Bar"]
+        let expected = ["key1": "t:foo", "key2": "t:bar", "key3": "bar"]
         XCTAssertEqual(actual, expected)
     }
 
-    func test_update_updatesValueswithReplacements() {
-        let file = try! StringsFile(filePath: "en.lproj/Localizable.strings", fileSystem: fs)
-        try! file.update(withReplacements: ["Foo": "NewFoo", "Bar": "NewBar"])
-        let actual = fs.files["en.lproj/Localizable.strings"]
+    func test_update_updatesValuesWithReplacements() {
+        let file = try! StringsFile(filePath: "/en.lproj/Localizable.strings", fileSystem: fs)
+        try! file.update(withReplacements: ["foo": "NewFoo", "bar": "NewBar"])
+        let actual = fs.files["/en.lproj/Localizable.strings"]
         let expected =
         """
-        /* A comment */
+        /* First comment */
         "key1" = "NewFoo";
 
-        /* Another comment */
+        /* Second comment */
         "key2" = "NewBar";
+
+        /* Third comment */
+        "key3" = "bar";
         """
         XCTAssertEqual(actual, expected)
     }
 
-    func test_update_leavesValuesWithoutReplacements() {
-        let file = try! StringsFile(filePath: "en.lproj/Localizable.strings", fileSystem: fs)
-        try! file.update(withReplacements: ["Foo": "NewFoo"])
-        let actual = fs.files["en.lproj/Localizable.strings"]
+    func test_update_marksValuesWithoutReplacements() {
+        let file = try! StringsFile(filePath: "/en.lproj/Localizable.strings", fileSystem: fs)
+        try! file.update(withReplacements: ["foo": "NewFoo"])
+        let actual = fs.files["/en.lproj/Localizable.strings"]
         let expected =
         """
-        /* A comment */
+        /* First comment */
         "key1" = "NewFoo";
 
-        /* Another comment */
-        "key2" = "Bar";
+        /* Second comment */
+        "key2" = "__bar__";
+
+        /* Third comment */
+        "key3" = "bar";
         """
         XCTAssertEqual(actual, expected)
     }
 
     func test_update_returnsAnUpdateResult() {
-        let file = try! StringsFile(filePath: "en.lproj/Localizable.strings", fileSystem: fs)
+        let file = try! StringsFile(filePath: "/en.lproj/Localizable.strings", fileSystem: fs)
         let result = try? file.update(withReplacements: [
-            "Foo": "NewFoo",
+            "foo": "NewFoo",
 
         ])
-        XCTAssertEqual(result?.unknownKeys,["Bar"])
-        XCTAssertEqual(result?.replacedKeys, ["Foo": "NewFoo"])
+        XCTAssertEqual(result?.unknownKeys,["bar"])
+        XCTAssertEqual(result?.replacedKeys, ["foo": "NewFoo"])
     }
 }

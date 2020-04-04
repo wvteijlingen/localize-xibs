@@ -1,13 +1,11 @@
-@_implementationOnly import Foundation
+import Foundation
 
 private extension String {
     var fileURL: URL { URL(fileURLWithPath: self) }
 }
 
 public enum Error: Swift.Error {
-    case generic
     case fileNotLocalized
-    case noInputsSpecified
 }
 
 /// A file that is localized by Xcode and sits inside an *.lproj directory.
@@ -47,9 +45,9 @@ extension LocalizedFile {
 /// A XIB or Storyboard file.
 struct InterfaceBuilderFile: LocalizedFile {
     let filePath: String
-    let fileSystem: FileSystemProtocol
+    let fileSystem: FileSystem
 
-    init(filePath: String, fileSystem: FileSystemProtocol) throws {
+    init(filePath: String, fileSystem: FileSystem) throws {
         guard filePath.fileURL.deletingLastPathComponent().lastPathComponent.hasSuffix(".lproj") else {
             throw Error.fileNotLocalized
         }
@@ -79,9 +77,9 @@ struct InterfaceBuilderFile: LocalizedFile {
 /// A .strings file.
 struct StringsFile: LocalizedFile {
     let filePath: String
-    let fileSystem: FileSystemProtocol
+    let fileSystem: FileSystem
 
-    init(filePath: String, fileSystem: FileSystemProtocol) throws {
+    init(filePath: String, fileSystem: FileSystem) throws {
         guard filePath.fileURL.deletingLastPathComponent().lastPathComponent.hasSuffix(".lproj") else {
             throw Error.fileNotLocalized
         }
@@ -91,7 +89,7 @@ struct StringsFile: LocalizedFile {
 
     /// All keys and values in this file.
     func keysAndValues() throws -> [String: String] {
-        let data = try String(contentsOfFile: filePath)
+        let data = try fileSystem.contents(ofFile: filePath)
         let lines = data.components(separatedBy: .newlines)
         let keysWithValues: [(String, String)] = lines.compactMap { line in
             // https://whatdidilearn.info/2018/07/29/how-to-capture-regex-group-values-in-swift.html
@@ -113,7 +111,7 @@ struct StringsFile: LocalizedFile {
     /// - note: The keys in the replacements dictionary are not the keys in the .strings file,
     ///         but the existing values in the .strings file.
     @discardableResult func update(withReplacements replacements: [String: String]) throws -> UpdateResult {
-        let data = try String(contentsOfFile: filePath)
+        let data = try fileSystem.contents(ofFile: filePath)
         let inputLines = data.components(separatedBy: .newlines)
 
         var updateResult = UpdateResult()
@@ -142,7 +140,7 @@ struct StringsFile: LocalizedFile {
             }
         }
 
-        try outputLines.joined(separator: "\n").write(toFile: filePath, atomically: true, encoding: .utf8)
+        try fileSystem.write(outputLines.joined(separator: "\n"), to: filePath)
 
         return updateResult
     }

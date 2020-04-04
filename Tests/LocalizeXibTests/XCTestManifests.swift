@@ -6,6 +6,7 @@ import XCTest
             testCase(StringsFileTests.allTests),
             testCase(InterfaceBuilderFileTests.allTests),
             testCase(UpdateResultTests.allTests),
+            testCase(IntegrationTests.allTests),
         ]
     }
 #endif

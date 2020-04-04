@@ -1,14 +1,14 @@
-@_implementationOnly import Foundation
+import class Foundation.FileManager
+import struct Foundation.URL
 import PathKit
 
-protocol FileSystemProtocol {
+protocol FileSystem {
     func fileExists(atPath: String) -> Bool
     func contents(ofFile: String) throws -> String
     func write(_ string: String, to: String) throws
-    func glob(_ pattern: String) -> [String]
 }
 
-struct FileSystem: FileSystemProtocol {
+struct DefaultFileSystem: FileSystem {
     func fileExists(atPath path: String) -> Bool {
         FileManager.default.fileExists(atPath: path)
     }
@@ -19,9 +19,5 @@ struct FileSystem: FileSystemProtocol {
 
     func write(_ string: String, to filePath: String) throws {
         try string.write(to: URL(fileURLWithPath: filePath), atomically: true, encoding: .utf8)
-    }
-
-    func glob(_ pattern: String) -> [String] {
-        Path.glob(pattern).map(\.string)
     }
 }

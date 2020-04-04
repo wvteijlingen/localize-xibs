@@ -6,7 +6,8 @@ import PackageDescription
 let package = Package(
     name: "LocalizeXib",
     products: [
-        .executable(name: "localize-xibs", targets: ["LocalizeXib"]),
+        .executable(name: "localize-xibs", targets: ["LocalizeXibCli"]),
+        .library(name: "LocalizeXibCore", targets: ["LocalizeXibCore"])
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser", .upToNextMinor(from: "0.0.1")),
@@ -15,16 +16,20 @@ let package = Package(
     ],
     targets: [
         .target(
-            name: "LocalizeXib",
+            name: "LocalizeXibCore",
             dependencies: [
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
-                .product(name: "PathKit", package: "PathKit"),
-                .product(name: "Rainbow", package: "Rainbow"),
+                "PathKit",
+                "Rainbow"
             ]
+        ),
+        .target(
+            name: "LocalizeXibCli",
+            dependencies: ["LocalizeXibCore"]
         ),
         .testTarget(
             name: "LocalizeXibTests",
-            dependencies: [.target(name: "LocalizeXib")]
+            dependencies: ["LocalizeXibCore", "PathKit", "Rainbow"]
         ),
     ]
 )

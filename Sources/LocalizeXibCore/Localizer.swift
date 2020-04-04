@@ -1,34 +1,37 @@
-import ArgumentParser
-import PathKit
 import Rainbow
 
-var hasError = false
-var fileSystem: FileSystemProtocol = FileSystem()
+public struct Localizer {
+    let translationFiles: [String]
+    let xibFiles: [String]
+    private let fileSystem: FileSystem = DefaultFileSystem()
 
-struct Localize: ParsableCommand {
-    @Flag(help: "Treat warnings as errors.")
-    var strict: Bool
-
-    @Flag(help: "Display extra information while processing.")
-    var verbose: Bool
-
-    @Argument(help: "List of .strings files containing the translations.")
-    var inputFiles: [String]
-
-    func validate() throws {
-        if inputFiles.isEmpty {
-            throw Error.noInputsSpecified
-        }
+    public init(translationFiles: [String], xibFiles: [String]) {
+        self.translationFiles = translationFiles
+        self.xibFiles = xibFiles
     }
 
-    func run() throws {
-        let translationSources = inputFiles.compactMap { (filePath) -> StringsFile? in
+    @discardableResult
+    public func localize(strict: Bool = false, verbose: Bool = false) -> Bool {
+        var success = true
+
+        let logIssue = { (message: String, strict: Bool) in
+            let prefix: String
+            if strict {
+                success = false
+                prefix = "error".red
+            } else {
+                prefix = "warning".yellow
+            }
+            print("\(prefix): \(message)")
+        }
+
+        let translationSources = translationFiles.compactMap { (filePath) -> StringsFile? in
             do {
                 return try StringsFile(filePath: filePath, fileSystem: fileSystem)
             } catch {
                 switch error {
                 case Error.fileNotLocalized:
-                    logIssue("\(filePath) is not located in an .lproj directory, skipping", strict: strict)
+                    logIssue("\(filePath) is not located in an .lproj directory, skipping", strict)
                 default:
                     print(error)
                 }
@@ -36,7 +39,7 @@ struct Localize: ParsableCommand {
             return nil
         }
 
-        let xibs = fileSystem.glob("./**/Base.lproj/*.{xib,storyboard}").compactMap {
+        let xibs = xibFiles.compactMap {
             try? InterfaceBuilderFile(filePath: $0, fileSystem: fileSystem)
         }
 
@@ -57,7 +60,7 @@ struct Localize: ParsableCommand {
                 let result = try! outputFile.update(withReplacements: source.keysAndValues())
 
                 for key in result.unknownKeys {
-                    logIssue("Unknown translation for \"\(key)\"", strict: strict)
+                    logIssue("Unknown translation for \"\(key)\"", strict)
                 }
 
                 if verbose {
@@ -68,21 +71,6 @@ struct Localize: ParsableCommand {
             }
         }
 
-        if hasError {
-            Self.exit(withError: Error.generic)
-        }
-    }
-
-    private func logIssue(_ message: String, strict: Bool) {
-        let prefix: String
-        if strict {
-            hasError = true
-            prefix = "error".red
-        } else {
-            prefix = "warning".yellow
-        }
-        print("\(prefix): \(message)")
+        return success
     }
 }
-
-Localize.main()

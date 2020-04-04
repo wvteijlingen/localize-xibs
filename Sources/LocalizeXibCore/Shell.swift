@@ -1,4 +1,4 @@
-@_implementationOnly import Foundation
+import Foundation
 
 typealias ShellResult = (output: String?, status: Int32)
 

@@ -1,8 +1,8 @@
-@testable import LocalizeXib
+@testable import LocalizeXibCore
+import class Foundation.NSError
 
-class MockFileSystem: FileSystemProtocol {
+class MockFileSystem: FileSystem {
     var files: [String: String] = [:]
-    var globFiles: Set<String> = []
 
     func fileExists(atPath path: String) -> Bool {
         files[path] != nil
@@ -10,7 +10,7 @@ class MockFileSystem: FileSystemProtocol {
 
     func contents(ofFile path: String) throws -> String {
         guard let contents = files[path] else {
-            throw LocalizeXib.Error.generic
+            throw NSError(domain: "", code: 999, userInfo: nil)
         }
         return contents
     }
@@ -19,15 +19,7 @@ class MockFileSystem: FileSystemProtocol {
         files[filePath] =  string
     }
 
-    func glob(_ pattern: String) -> [String] {
-        Array(globFiles)
-    }
-
     func addFile(path: String, contents: String) {
         files[path] = contents
-    }
-
-    func addGlob(path: String) {
-        globFiles.insert(path)
     }
 }

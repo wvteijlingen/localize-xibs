@@ -1,4 +1,4 @@
-@testable import LocalizeXib
+@testable import LocalizeXibCore
 import XCTest
 
 final class UpdateResultTests: XCTestCase {
