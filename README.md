@@ -1,13 +1,13 @@
 <p align="center">
+  <a href="https://codecov.io/gh/wvteijlingen/localize-xibs">
+    <img src="https://codecov.io/gh/wvteijlingen/localize-xibs/branch/master/graph/badge.svg" />
+  </a>
+</p>
+<p align="center">
     <a href="#installation">Installation</a>
   • <a href="#usage">Usage</a>
   • <a href="#usage-as-an-xcode-run-script">Usage as an Xcode Run Script</a>
   • <a href="#command-line-api">Command line API</a>
-</p>
-<p align="center>
-  <a href="https://codecov.io/gh/wvteijlingen/localize-xibs">
-    <img src="https://codecov.io/gh/wvteijlingen/localize-xibs/branch/master/graph/badge.svg" />
-  </a>
 </p>
 
 # LocalizeXIBs
