@@ -4,8 +4,10 @@ import PathKit
 final class IntegrationTests: XCTestCase {
     static var allTests = [
         ("test_happyPath", test_happyPath),
-        ("test_noInputFiles_throwsError", test_noInputFiles_throwsError),
-        ("test_noLocalizableFiles_throwsError", test_noLocalizableFiles_throwsError)
+        ("test_noInputFiles_printsError", test_noInputFiles_printsError),
+        ("test_noStrictArgument_printsWarnings", test_noStrictArgument_printsWarnings),
+        ("test_strictArgument_printsErrors", test_strictArgument_printsErrors),
+        ("test_noLocalizableFiles_printsError", test_noLocalizableFiles_printsError)
     ]
 
     /// Returns the path to the built products directory.
@@ -21,21 +23,27 @@ final class IntegrationTests: XCTestCase {
     }
 
     static var fixturesDirectory: Path!
-    var testDirectory: Path!
 
     override class func setUp() {
         IntegrationTests.fixturesDirectory =  Path.current + "Tests" + "Fixtures"
     }
 
-    override func setUp() {
-        let tempDirectory = try! Path.uniqueTemporary()
-        let testDirectory = tempDirectory + "Fixtures"
-        try! IntegrationTests.fixturesDirectory.copy(testDirectory)
-        self.testDirectory = testDirectory
+    private func uniqueTestDirectory(withFixtures: Bool) -> Path {
+        var testDirectory = try! Path.uniqueTemporary()
+        if withFixtures {
+            testDirectory = testDirectory + "Fixtures"
+            try! IntegrationTests.fixturesDirectory.copy(testDirectory)
+        }
+        return testDirectory
     }
 
     func test_happyPath() throws {
-        try run(args: ["./en.lproj/Localizable.strings", "./nl.lproj/Localizable.strings"], pwd: testDirectory.string)
+        let testDirectory = uniqueTestDirectory(withFixtures: true)
+
+        try run(
+            args: ["./en.lproj/Localizable.strings", "./nl.lproj/Localizable.strings"],
+            pwd: testDirectory.string
+        )
 
         XCTAssertEqual(
             try String(contentsOfFile: (testDirectory + "en.lproj/Main.strings").string),
@@ -56,18 +64,31 @@ final class IntegrationTests: XCTestCase {
         )
     }
 
-    func test_noInputFiles_throwsError() throws {
-        let output = try run(pwd: try! Path.uniqueTemporary().string)
-        XCTAssertEqual(output.stderr, "Error: No input files specified. Run localize-xib -h for usage.\n")
-    }
-
-    func test_noLocalizableFiles_throwsError() throws {
-        let output = try run(args: ["./en.lproj/Localizable.strings"], pwd: try! Path.uniqueTemporary().string)
+    func test_noLocalizableFiles_printsError() throws {
+        let output = try run(
+            args: ["./en.lproj/Localizable.strings"],
+            pwd: uniqueTestDirectory(withFixtures: false).string
+        )
         XCTAssertEqual(output.stderr, "Error: No localizable XIBs or Storyboards were found. Make sure you use Base Internationalization and your XIBs and Storyboards are located in Base.lproj directories.\n")
     }
 
+    func test_noInputFiles_printsError() throws {
+        let output = try run(pwd: uniqueTestDirectory(withFixtures: false).string)
+        XCTAssertEqual(output.stderr, "Error: No input files specified. Run localize-xib -h for usage.\n")
+    }
+
+    func test_noStrictArgument_printsWarnings() throws {
+        let output = try run(args: ["./en.lproj/NoSuchFile.strings"], pwd:  uniqueTestDirectory(withFixtures: true).string)
+        XCTAssertTrue(output.stdout.contains("warning: The file “NoSuchFile.strings” couldn’t be opened because there is no such file"))
+    }
+
+    func test_strictArgument_printsErrors() throws {
+        let output = try run(args: ["./en.lproj/NoSuchFile.strings", "--strict"], pwd:  uniqueTestDirectory(withFixtures: true).string)
+        XCTAssertTrue(output.stdout.contains("error: The file “NoSuchFile.strings” couldn’t be opened because there is no such file"))
+    }
+
     @discardableResult
-    private func run(args: [String] = [], pwd: String) throws -> (stdout: String?, stderr: String?) {
+    private func run(args: [String] = [], pwd: String) throws -> (stdout: String, stderr: String) {
         // Some of the APIs that we use below are available in macOS 10.13 and above.
         guard #available(macOS 10.13, *) else {
             fatalError("Integration tests are not supported on macOS versions lower than 10.13")
@@ -92,8 +113,8 @@ final class IntegrationTests: XCTestCase {
         process.waitUntilExit()
 
         return (
-            stdout: String(data: stdoutPipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8),
-            stderr: String(data: stderrPipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8)
+            stdout: String(data: stdoutPipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? "",
+            stderr: String(data: stderrPipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
         )
     }
 }
