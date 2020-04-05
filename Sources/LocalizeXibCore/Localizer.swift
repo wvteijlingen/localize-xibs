@@ -1,20 +1,21 @@
+import Foundation
 import Rainbow
 
 public struct Localizer {
     let translationFiles: [String]
-    let xibFiles: [String]
+    let interfaceBuilderFiles: [String]
     private let fileSystem: FileSystem = DefaultFileSystem()
 
-    public init(translationFiles: [String], xibFiles: [String]) {
+    public init(translationFiles: [String], interfaceBuilderFiles: [String]) {
         self.translationFiles = translationFiles
-        self.xibFiles = xibFiles
+        self.interfaceBuilderFiles = interfaceBuilderFiles
     }
 
     @discardableResult
     public func localize(strict: Bool = false, verbose: Bool = false) -> Bool {
         var success = true
 
-        let logIssue = { (message: String, strict: Bool) in
+        let logError = { (error: Swift.Error) in
             let prefix: String
             if strict {
                 success = false
@@ -22,24 +23,19 @@ public struct Localizer {
             } else {
                 prefix = "warning".yellow
             }
-            print("\(prefix): \(message)")
+            print("\(prefix): \(error.localizedDescription)")
         }
 
         let translationSources = translationFiles.compactMap { (filePath) -> StringsFile? in
             do {
                 return try StringsFile(filePath: filePath, fileSystem: fileSystem)
             } catch {
-                switch error {
-                case Error.fileNotLocalized:
-                    logIssue("\(filePath) is not located in an .lproj directory, skipping", strict)
-                default:
-                    print(error)
-                }
+                logError(error)
             }
             return nil
         }
 
-        let xibs = xibFiles.compactMap {
+        let xibs = interfaceBuilderFiles.compactMap {
             try? InterfaceBuilderFile(filePath: $0, fileSystem: fileSystem)
         }
 
@@ -57,16 +53,20 @@ public struct Localizer {
 
                 DefaultShell.run("ibtool \(xib.filePath) --generate-strings-file \(outputFile.filePath)", printCommand: verbose)
 
-                let result = try! outputFile.update(withReplacements: source.keysAndValues())
+                do {
+                    let result = try outputFile.update(withReplacements: source.keysAndValues())
 
-                for key in result.unknownKeys {
-                    logIssue("Unknown translation for \"\(key)\"", strict)
-                }
-
-                if verbose {
-                    for (key, value) in result.replacedKeys {
-                        print("Translated \"\(key)\" with \"\(value)\"")
+                    for key in result.unknownKeys {
+                        logError(Error.unknownTranslation(key))
                     }
+
+                    if verbose {
+                        for (key, value) in result.replacedKeys {
+                            print("Translated \"\(key)\" with \"\(value)\"")
+                        }
+                    }
+                } catch {
+                    logError(error)
                 }
             }
         }

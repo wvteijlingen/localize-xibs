@@ -15,6 +15,17 @@ final class InterfaceBuilderFileTests: XCTestCase {
         fs.addFile(path: "/Base.lproj/Main.xib", contents: "")
     }
 
+    func test_init_throwsErrorWhenFileIsNotInLprojDirectory() {
+        XCTAssertThrowsError(try InterfaceBuilderFile(filePath: "/Main.xib", fileSystem: fs)) { error in
+            switch error {
+            case LocalizeXibCore.Error.fileNotLocalized(let filePath):
+                XCTAssertEqual(filePath, "/Main.xib")
+            default:
+                XCTFail()
+            }
+        }
+    }
+
     func test_stringsFile_returnsStringsFileIfItExists() throws {
         fs.addFile(path: "/en.lproj/Main.strings", contents: "")
         let file = try InterfaceBuilderFile(filePath: "/Base.lproj/Main.xib", fileSystem: fs)

@@ -32,9 +32,12 @@ class StringsFileTests: XCTestCase {
 
     func test_init_throwsErrorWhenFileIsNotInLprojDirectory() {
         XCTAssertThrowsError(try StringsFile(filePath: "/Localizable.strings", fileSystem: fs)) { error in
-//            guard let error = error as? Error.fileNotLocalized else {
-//                XCTFail()
-//            }
+            switch error {
+            case LocalizeXibCore.Error.fileNotLocalized(let filePath):
+                XCTAssertEqual(filePath, "/Localizable.strings")
+            default:
+                XCTFail()
+            }
         }
     }
 
@@ -44,6 +47,12 @@ class StringsFileTests: XCTestCase {
         XCTAssertEqual(actual?["key1"], "t:foo")
         XCTAssertEqual(actual?["key2"], "t:bar")
         XCTAssertEqual(actual?["key3"], "t:bar \n baz")
+    }
+
+    func test_keysAndValues_throwsErrorWhenFileIsInvalid() throws {
+        fs.addFile(path: "/en.lproj/Invalid.strings", contents: "Invalid file")
+        let file = try StringsFile(filePath: "/en.lproj/Invalid.strings", fileSystem: fs)
+        XCTAssertThrowsError(try file.keysAndValues())
     }
 
     func test_update_updatesValuesWithReplacements() throws {

@@ -4,9 +4,21 @@ private extension String {
     var fileURL: URL { URL(fileURLWithPath: self) }
 }
 
-public enum Error: Swift.Error {
-    case fileNotLocalized
-    case invalidFileFormat
+public enum Error: Swift.Error, LocalizedError {
+    case fileNotLocalized(filePath: String)
+    case invalidFileFormat(filePath: String)
+    case unknownTranslation(String)
+
+    public var errorDescription: String? {
+        switch self {
+        case .fileNotLocalized(let filePath):
+            return "The file \(filePath) is not located in an *.lproj directory."
+        case .invalidFileFormat(let filePath):
+            return "The file \(filePath) could not be loaded."
+        case .unknownTranslation(let key):
+            return "Unknown translation for \"\(key)\""
+        }
+    }
 }
 
 /// A file that is localized by Xcode and sits inside an *.lproj directory.
@@ -50,7 +62,7 @@ struct InterfaceBuilderFile: LocalizedFile {
 
     init(filePath: String, fileSystem: FileSystem) throws {
         guard filePath.fileURL.deletingLastPathComponent().lastPathComponent.hasSuffix(".lproj") else {
-            throw Error.fileNotLocalized
+            throw Error.fileNotLocalized(filePath: filePath)
         }
         self.filePath = filePath
         self.fileSystem = fileSystem
@@ -82,7 +94,7 @@ struct StringsFile: LocalizedFile {
 
     init(filePath: String, fileSystem: FileSystem) throws {
         guard filePath.fileURL.deletingLastPathComponent().lastPathComponent.hasSuffix(".lproj") else {
-            throw Error.fileNotLocalized
+            throw Error.fileNotLocalized(filePath: filePath)
         }
         self.filePath = filePath
         self.fileSystem = fileSystem
@@ -96,7 +108,7 @@ struct StringsFile: LocalizedFile {
         let plist = try PropertyListSerialization.propertyList(from: data.data(using: .utf8)!, format: nil)
 
         guard let dict = plist as? [String: String] else {
-          throw Error.invalidFileFormat
+          throw Error.invalidFileFormat(filePath: filePath)
         }
 
         return dict
