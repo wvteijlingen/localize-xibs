@@ -10,7 +10,7 @@ jobs:
   build:
     env: 
       DEVELOPER_DIR: /Applications/Xcode_11.4.app/Contents/Developer
-      CODECOV_TOKEN: a9525c29-a039-40d1-9143-fc1fe93730bb"
+      CODECOV_TOKEN: a9525c29-a039-40d1-9143-fc1fe93730bb
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v2
