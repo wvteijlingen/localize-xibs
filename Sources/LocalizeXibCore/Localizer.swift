@@ -47,7 +47,7 @@ public struct Localizer {
             print("Found \(source.language.blue) translations at \(source.filePath.blue)")
 
             for xib in xibs {
-                guard let outputFile = xib.stringsFile(withLocale: source.locale) else { continue }
+                guard let outputFile = xib.stringsFile(forLocale: source.locale) else { continue }
 
                 if verbose {
                     print("Updating \(outputFile.filePath.green) with translations from \(source.filePath)")

@@ -18,14 +18,14 @@ final class InterfaceBuilderFileTests: XCTestCase {
     func test_stringsFile_returnsStringsFileIfItExists() throws {
         fs.addFile(path: "/en.lproj/Main.strings", contents: "")
         let file = try! InterfaceBuilderFile(filePath: "/Base.lproj/Main.xib", fileSystem: fs)
-        let result = file.stringsFile(withLocale: "en")
+        let result = file.stringsFile(forLocale: "en")
 
         XCTAssertEqual(result?.filePath, "/en.lproj/Main.strings")
     }
 
     func test_stringsFile_returnsNilIfItDoesNotExist() throws {
         let file = try! InterfaceBuilderFile(filePath: "/Base.lproj/Main.xib", fileSystem: fs)
-        let result = file.stringsFile(withLocale: "en")
+        let result = file.stringsFile(forLocale: "en")
 
         XCTAssertNil(result)
     }

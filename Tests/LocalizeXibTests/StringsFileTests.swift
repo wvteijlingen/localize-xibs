@@ -25,7 +25,7 @@ class StringsFileTests: XCTestCase {
             "key2" = "t:bar";
 
             /* Third comment */
-            "key3" = "bar";
+            "key3" = "t:bar \n baz";
             """
         )
     }
@@ -41,24 +41,20 @@ class StringsFileTests: XCTestCase {
     func test_keysAndValues_parsesAllKeysAndValuesFromTheFile() {
         let file = try! StringsFile(filePath: "/en.lproj/Localizable.strings", fileSystem: fs)
         let actual = try? file.keysAndValues()
-        let expected = ["key1": "t:foo", "key2": "t:bar", "key3": "bar"]
-        XCTAssertEqual(actual, expected)
+        XCTAssertEqual(actual?["key1"], "t:foo")
+        XCTAssertEqual(actual?["key2"], "t:bar")
+        XCTAssertEqual(actual?["key3"], "t:bar \n baz")
     }
 
     func test_update_updatesValuesWithReplacements() {
         let file = try! StringsFile(filePath: "/en.lproj/Localizable.strings", fileSystem: fs)
-        try! file.update(withReplacements: ["foo": "NewFoo", "bar": "NewBar"])
+        try! file.update(withReplacements: ["foo": "NewFoo", "bar": "NewBar", "bar \n baz": "NewBarBaz"])
         let actual = fs.files["/en.lproj/Localizable.strings"]
         let expected =
         """
-        /* First comment */
         "key1" = "NewFoo";
-
-        /* Second comment */
         "key2" = "NewBar";
-
-        /* Third comment */
-        "key3" = "bar";
+        "key3" = "NewBarBaz";
         """
         XCTAssertEqual(actual, expected)
     }
@@ -69,14 +65,9 @@ class StringsFileTests: XCTestCase {
         let actual = fs.files["/en.lproj/Localizable.strings"]
         let expected =
         """
-        /* First comment */
         "key1" = "NewFoo";
-
-        /* Second comment */
         "key2" = "__bar__";
-
-        /* Third comment */
-        "key3" = "bar";
+        "key3" = "__bar \n baz__";
         """
         XCTAssertEqual(actual, expected)
     }
@@ -85,9 +76,16 @@ class StringsFileTests: XCTestCase {
         let file = try! StringsFile(filePath: "/en.lproj/Localizable.strings", fileSystem: fs)
         let result = try? file.update(withReplacements: [
             "foo": "NewFoo",
-
         ])
-        XCTAssertEqual(result?.unknownKeys,["bar"])
-        XCTAssertEqual(result?.replacedKeys, ["foo": "NewFoo"])
+
+        guard let unknownKeys = result?.unknownKeys else {
+            XCTFail()
+            return
+        }
+
+        XCTAssert(unknownKeys.contains("bar"))
+        XCTAssert(unknownKeys.contains("bar \n baz"))
+        XCTAssertEqual(result?.replacedKeys["foo"], "NewFoo")
+        XCTAssertEqual(result?.replacedKeys["foo"], "NewFoo")
     }
 }

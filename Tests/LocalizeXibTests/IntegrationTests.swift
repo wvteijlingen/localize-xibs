@@ -37,26 +37,18 @@ final class IntegrationTests: XCTestCase {
         XCTAssertEqual(
             try! String(contentsOfFile: (testDirectory + "en.lproj/Main.strings").string),
             """
-
-            /* Class = "UIButton"; normalTitle = "t:button"; ObjectID = "TTJ-tj-MN7"; */
             "TTJ-tj-MN7.normalTitle" = "This is the button title";
-
-            /* Class = "UILabel"; text = "t:title"; ObjectID = "bcg-Rc-DAi"; */
             "bcg-Rc-DAi.text" = "Welcome to localize-xibs";
-
+            "pAx-Te-oS9.normalTitle" = "Weird \\" characters \\ \\n";
             """
         )
 
         XCTAssertEqual(
             try! String(contentsOfFile: (testDirectory + "nl.lproj/Main.strings").string),
             """
-
-            /* Class = "UIButton"; normalTitle = "t:button"; ObjectID = "TTJ-tj-MN7"; */
             "TTJ-tj-MN7.normalTitle" = "De is de knoptitel";
-
-            /* Class = "UILabel"; text = "t:title"; ObjectID = "bcg-Rc-DAi"; */
             "bcg-Rc-DAi.text" = "Welkom bij localize-xibs";
-
+            "pAx-Te-oS9.normalTitle" = "Rare \\" karakters \\ \\n";
             """
         )
     }

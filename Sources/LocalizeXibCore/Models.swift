@@ -6,6 +6,7 @@ private extension String {
 
 public enum Error: Swift.Error {
     case fileNotLocalized
+    case invalidFileFormat
 }
 
 /// A file that is localized by Xcode and sits inside an *.lproj directory.
@@ -60,7 +61,7 @@ struct InterfaceBuilderFile: LocalizedFile {
     /// Example: If the receiver represents the file `Root/Base.lproj/Main.xib`,
     /// and this method is called with `locale: nl`, this would return a `StringsFile`
     /// representing `Root/nl.lproj/Main.strings` if such a file exists.
-    func stringsFile(withLocale locale: String) -> StringsFile? {
+    func stringsFile(forLocale locale: String) -> StringsFile? {
         let path = filePath
             .fileURL
             .deletingLastPathComponent()
@@ -87,60 +88,44 @@ struct StringsFile: LocalizedFile {
         self.fileSystem = fileSystem
     }
 
-    /// All keys and values in this file.
+    /// Returns all keys and values in this file.
+    /// - Throws: Error.invalidFileFormat
+    /// - Returns: All keys and values
     func keysAndValues() throws -> [String: String] {
         let data = try fileSystem.contents(ofFile: filePath)
-        let lines = data.components(separatedBy: .newlines)
-        let keysWithValues: [(String, String)] = lines.compactMap { line in
-            // https://whatdidilearn.info/2018/07/29/how-to-capture-regex-group-values-in-swift.html
-            guard
-                let regex = try? NSRegularExpression(pattern: #""(.+)" = "(.*)";"#),
-                let match = regex.firstMatch(in: line, options: [], range: NSRange(location: 0, length: line.utf16.count)),
-                let keyRange = Range(match.range(at: 1), in: line),
-                let valueRange = Range(match.range(at: 2), in: line)
-            else {
-                return nil
-            }
+        let plist = try PropertyListSerialization.propertyList(from: data.data(using: .utf8)!, format: nil)
 
-            return (String(line[keyRange]), String(line[valueRange]))
+        guard let dict = plist as? [String: String] else {
+          throw Error.invalidFileFormat
         }
-        return Dictionary(uniqueKeysWithValues: keysWithValues)
+
+        return dict
     }
 
     /// Updates the file by replacing the given values with their replacements.
+    /// The entries in the output file will be sorted a-z on key.
     /// - note: The keys in the replacements dictionary are not the keys in the .strings file,
     ///         but the existing values in the .strings file.
     @discardableResult func update(withReplacements replacements: [String: String]) throws -> UpdateResult {
-        let data = try fileSystem.contents(ofFile: filePath)
-        let inputLines = data.components(separatedBy: .newlines)
-
         var updateResult = UpdateResult()
-
-        let outputLines = inputLines.map { (line) -> String in
-            guard
-                let regex = try? NSRegularExpression(pattern: #"("[^"]+" = ")t:([^"]*)(";)"#),
-                let match = regex.firstMatch(in: line, options: [], range: NSRange(location: 0, length: line.utf16.count)),
-                let preRange = Range(match.range(at: 1), in: line),
-                let keyRange = Range(match.range(at: 2), in: line),
-                let postRange = Range(match.range(at: 3), in: line)
-            else {
-                return line
-            }
-
-            let pre = String(line[preRange])
-            let key = String(line[keyRange])
-            let post = String(line[postRange])
-
+        let entries = try keysAndValues()
+        let replacedEntries = entries.mapValues { (key) -> String in
+            guard key.hasPrefix("t:") else { return key }
+            let key = String(key.dropFirst(2))
             if let replacement = replacements[key] {
                 updateResult.registerReplacedKey(key, value: replacement)
-                return "\(pre)\(replacement)\(post)"
+                return replacement.replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "\n", with: "\\n")
             } else {
                 updateResult.registerUnknownKey(key)
-                return "\(pre)__\(key)__\(post)"
+                return "__\(key)__"
             }
         }
 
-        try fileSystem.write(outputLines.joined(separator: "\n"), to: filePath)
+        let output = replacedEntries.map { (key, value) in
+            "\"\(key)\" = \"\(value)\";"
+        }.sorted().joined(separator: "\n")
+
+        try fileSystem.write(output, to: filePath)
 
         return updateResult
     }
