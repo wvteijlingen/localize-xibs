@@ -38,17 +38,17 @@ class StringsFileTests: XCTestCase {
         }
     }
 
-    func test_keysAndValues_parsesAllKeysAndValuesFromTheFile() {
-        let file = try! StringsFile(filePath: "/en.lproj/Localizable.strings", fileSystem: fs)
+    func test_keysAndValues_parsesAllKeysAndValuesFromTheFile() throws {
+        let file = try StringsFile(filePath: "/en.lproj/Localizable.strings", fileSystem: fs)
         let actual = try? file.keysAndValues()
         XCTAssertEqual(actual?["key1"], "t:foo")
         XCTAssertEqual(actual?["key2"], "t:bar")
         XCTAssertEqual(actual?["key3"], "t:bar \n baz")
     }
 
-    func test_update_updatesValuesWithReplacements() {
-        let file = try! StringsFile(filePath: "/en.lproj/Localizable.strings", fileSystem: fs)
-        try! file.update(withReplacements: ["foo": "NewFoo", "bar": "NewBar", "bar \n baz": "NewBarBaz"])
+    func test_update_updatesValuesWithReplacements() throws {
+        let file = try StringsFile(filePath: "/en.lproj/Localizable.strings", fileSystem: fs)
+        try file.update(withReplacements: ["foo": "NewFoo", "bar": "NewBar", "bar \n baz": "NewBarBaz"])
         let actual = fs.files["/en.lproj/Localizable.strings"]
         let expected =
         """
@@ -59,9 +59,9 @@ class StringsFileTests: XCTestCase {
         XCTAssertEqual(actual, expected)
     }
 
-    func test_update_marksValuesWithoutReplacements() {
-        let file = try! StringsFile(filePath: "/en.lproj/Localizable.strings", fileSystem: fs)
-        try! file.update(withReplacements: ["foo": "NewFoo"])
+    func test_update_marksValuesWithoutReplacements() throws {
+        let file = try StringsFile(filePath: "/en.lproj/Localizable.strings", fileSystem: fs)
+        try file.update(withReplacements: ["foo": "NewFoo"])
         let actual = fs.files["/en.lproj/Localizable.strings"]
         let expected =
         """
@@ -72,8 +72,8 @@ class StringsFileTests: XCTestCase {
         XCTAssertEqual(actual, expected)
     }
 
-    func test_update_returnsAnUpdateResult() {
-        let file = try! StringsFile(filePath: "/en.lproj/Localizable.strings", fileSystem: fs)
+    func test_update_returnsAnUpdateResult() throws {
+        let file = try StringsFile(filePath: "/en.lproj/Localizable.strings", fileSystem: fs)
         let result = try? file.update(withReplacements: [
             "foo": "NewFoo",
         ])

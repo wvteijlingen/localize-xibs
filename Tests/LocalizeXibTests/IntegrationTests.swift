@@ -35,7 +35,7 @@ final class IntegrationTests: XCTestCase {
         process.waitUntilExit()
 
         XCTAssertEqual(
-            try! String(contentsOfFile: (testDirectory + "en.lproj/Main.strings").string),
+            try String(contentsOfFile: (testDirectory + "en.lproj/Main.strings").string),
             """
             "TTJ-tj-MN7.normalTitle" = "This is the button title";
             "bcg-Rc-DAi.text" = "Welcome to localize-xibs";
@@ -44,7 +44,7 @@ final class IntegrationTests: XCTestCase {
         )
 
         XCTAssertEqual(
-            try! String(contentsOfFile: (testDirectory + "nl.lproj/Main.strings").string),
+            try String(contentsOfFile: (testDirectory + "nl.lproj/Main.strings").string),
             """
             "TTJ-tj-MN7.normalTitle" = "De is de knoptitel";
             "bcg-Rc-DAi.text" = "Welkom bij localize-xibs";
