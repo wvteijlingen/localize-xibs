@@ -10,10 +10,16 @@ jobs:
   build:
     env: 
       DEVELOPER_DIR: /Applications/Xcode_11.4.app/Contents/Developer
+      CODECOV_TOKEN: a9525c29-a039-40d1-9143-fc1fe93730bb
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v2
     - name: Build
       run: swift build
     - name: Test
-      run: swift test
+      run: swift test --enable-code-coverage
+    - name: Codecov
+      run: |
+        xcrun llvm-cov export -format="lcov" .build/debug/LocalizeXibPackageTests.xctest/Contents/MacOS/LocalizeXibPackageTests -instr-profile .build/debug/codecov/default.profdata > info.lcov
+        bash <(curl -s https://codecov.io/bash)
+
