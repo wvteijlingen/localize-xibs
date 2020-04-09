@@ -11,7 +11,6 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser", .upToNextMinor(from: "0.0.1")),
-        .package(url: "https://github.com/kylef/PathKit", .upToNextMajor(from: "1.0.0")),
         .package(url: "https://github.com/onevcat/Rainbow", from: "3.0.0"),
     ],
     targets: [
@@ -28,7 +27,7 @@ let package = Package(
         ),
         .testTarget(
             name: "LocalizeXibTests",
-            dependencies: ["LocalizeXibCore", "PathKit", "Rainbow"]
+            dependencies: ["LocalizeXibCore", "Rainbow"]
         ),
     ]
 )

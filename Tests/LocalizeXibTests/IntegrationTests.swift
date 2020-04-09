@@ -1,5 +1,4 @@
 import XCTest
-import PathKit
 
 final class IntegrationTests: XCTestCase {
     static var allTests = [
@@ -22,18 +21,28 @@ final class IntegrationTests: XCTestCase {
       #endif
     }
 
-    static var fixturesDirectory: Path!
+    static var fixturesDirectory: URL!
 
     override class func setUp() {
-        IntegrationTests.fixturesDirectory =  Path.current + "Tests" + "Fixtures"
+        fixturesDirectory = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+            .appendingPathComponent("Tests")
+            .appendingPathComponent("Fixtures")
     }
 
-    private func uniqueTestDirectory(withFixtures: Bool) -> Path {
-        var testDirectory = try! Path.uniqueTemporary()
+    private func uniqueTestDirectory(withFixtures: Bool) -> URL {
+        let fileManager = FileManager.default
+
+        let temporaryDirectory = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
+        try! fileManager.createDirectory(at: temporaryDirectory, withIntermediateDirectories: true, attributes: nil)
+
+        let testDirectory = temporaryDirectory.appendingPathComponent("Fixtures")
+
         if withFixtures {
-            testDirectory = testDirectory + "Fixtures"
-            try! IntegrationTests.fixturesDirectory.copy(testDirectory)
+            try! fileManager.copyItem(at: Self.fixturesDirectory, to: testDirectory)
+        } else {
+            try! fileManager.createDirectory(at: testDirectory, withIntermediateDirectories: true, attributes: nil)
         }
+
         return testDirectory
     }
 
@@ -42,11 +51,11 @@ final class IntegrationTests: XCTestCase {
 
         try run(
             args: ["./en.lproj/Localizable.strings", "./nl.lproj/Localizable.strings"],
-            pwd: testDirectory.string
+            pwd: testDirectory.path
         )
 
         XCTAssertEqual(
-            try String(contentsOfFile: (testDirectory + "en.lproj/Main.strings").string),
+            try String(contentsOfFile: testDirectory.appendingPathComponent("en.lproj/Main.strings").path),
             """
             "TTJ-tj-MN7.normalTitle" = "This is the button title";
             "bcg-Rc-DAi.text" = "Welcome to localize-xibs";
@@ -55,7 +64,7 @@ final class IntegrationTests: XCTestCase {
         )
 
         XCTAssertEqual(
-            try String(contentsOfFile: (testDirectory + "nl.lproj/Main.strings").string),
+            try String(contentsOfFile: testDirectory.appendingPathComponent("nl.lproj/Main.strings").path),
             """
             "TTJ-tj-MN7.normalTitle" = "De is de knoptitel";
             "bcg-Rc-DAi.text" = "Welkom bij localize-xibs";
@@ -64,7 +73,7 @@ final class IntegrationTests: XCTestCase {
         )
 
         XCTAssertEqual(
-            try String(contentsOfFile: (testDirectory + "Subdirectory/en.lproj/Main.strings").string),
+            try String(contentsOfFile: testDirectory.appendingPathComponent("Subdirectory/en.lproj/Main.strings").path),
             """
             "TTJ-tj-MN7.normalTitle" = "This is the button title";
             "bcg-Rc-DAi.text" = "Welcome to localize-xibs";
@@ -73,7 +82,7 @@ final class IntegrationTests: XCTestCase {
         )
 
         XCTAssertEqual(
-            try String(contentsOfFile: (testDirectory + "Subdirectory/nl.lproj/Main.strings").string),
+            try String(contentsOfFile: testDirectory.appendingPathComponent("Subdirectory/nl.lproj/Main.strings").path),
             """
             "TTJ-tj-MN7.normalTitle" = "De is de knoptitel";
             "bcg-Rc-DAi.text" = "Welkom bij localize-xibs";
@@ -85,23 +94,23 @@ final class IntegrationTests: XCTestCase {
     func test_noLocalizableFiles_printsWarningToStdOut() throws {
         let output = try run(
             args: ["./en.lproj/Localizable.strings"],
-            pwd: uniqueTestDirectory(withFixtures: false).string
+            pwd: uniqueTestDirectory(withFixtures: false).path
         )
         XCTAssertEqual(output.stdout, "warning: No localizable XIBs or Storyboards were found. Make sure you use Base Internationalization and your XIBs and Storyboards are located in Base.lproj directories.\n")
     }
 
     func test_noInputFiles_printsErrorToStrErr() throws {
-        let output = try run(pwd: uniqueTestDirectory(withFixtures: false).string)
+        let output = try run(pwd: uniqueTestDirectory(withFixtures: false).path)
         XCTAssert(output.stderr.contains("Error: No input files specified"))
     }
 
     func test_noStrictArgument_printsWarningsToStdOut() throws {
-        let output = try run(args: ["./en.lproj/NoSuchFile.strings"], pwd:  uniqueTestDirectory(withFixtures: true).string)
+        let output = try run(args: ["./en.lproj/NoSuchFile.strings"], pwd:  uniqueTestDirectory(withFixtures: true).path)
         XCTAssertTrue(output.stdout.contains("warning: The file ./en.lproj/NoSuchFile.strings could not be loaded."))
     }
 
     func test_strictArgument_printsErrorsToStdErr() throws {
-        let output = try run(args: ["./en.lproj/NoSuchFile.strings", "--strict"], pwd:  uniqueTestDirectory(withFixtures: true).string)
+        let output = try run(args: ["./en.lproj/NoSuchFile.strings", "--strict"], pwd:  uniqueTestDirectory(withFixtures: true).path)
         XCTAssertTrue(output.stderr.contains("error: The file ./en.lproj/NoSuchFile.strings could not be loaded."))
     }
 
