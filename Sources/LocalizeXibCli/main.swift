@@ -2,22 +2,13 @@ import Foundation
 import ArgumentParser
 import LocalizeXibCore
 
-public enum Error: Swift.Error, LocalizedError {
-    case generic
-    case noInputFilesSpecified
-    case noLocalizableFilesFound
-
-    public var errorDescription: String? {
-        switch self {
-        case .noInputFilesSpecified:
-            return "No input files specified. Run localize-xib -h for usage."
-        case .noLocalizableFilesFound:
-            return "No localizable XIBs or Storyboards were found. Make sure you use Base Internationalization and your XIBs and Storyboards are located in Base.lproj directories."
-        case .generic:
-            return "localize-xib failed with errors"
-        }
-    }
+struct StandardError: TextOutputStream {
+  mutating func write(_ string: String) {
+    for byte in string.utf8 { putc(numericCast(byte), stderr) }
+  }
 }
+
+var standardError = StandardError()
 
 struct Localize: ParsableCommand {
     @Flag(help: "Treat warnings as errors.")
@@ -31,7 +22,7 @@ struct Localize: ParsableCommand {
 
     func validate() throws {
         if inputFiles.isEmpty {
-            throw Error.noInputFilesSpecified
+            throw ValidationError("No input files specified.")
         }
     }
 
@@ -40,14 +31,28 @@ struct Localize: ParsableCommand {
         let interfaceBuilderFiles = Set(glob.paths)
 
         guard !interfaceBuilderFiles.isEmpty else {
-            throw Error.noLocalizableFilesFound
+            log("No localizable XIBs or Storyboards were found. Make sure you use Base Internationalization and your XIBs and Storyboards are located in Base.lproj directories.", level: .warning)
+            return
         }
 
-        let localizer = Localizer(translationFiles: Set(inputFiles), interfaceBuilderFiles: interfaceBuilderFiles)
+        let localizer = Localizer(translationFiles: Set(inputFiles), interfaceBuilderFiles: interfaceBuilderFiles, logger: log)
         let success = localizer.localize(strict: strict, verbose: verbose)
 
-        if !success {
-            Self.exit(withError: Error.generic)
+        if success == false && strict {
+            throw ExitCode.failure
+        }
+    }
+
+    private func log(_ message: String, level: Localizer.LogLevel) {
+        // We use lowercase "warning" and "error" here so it will be picked up by the Xcode Issue Navigator.
+
+        switch level {
+        case .verbose, .info:
+            print(message)
+        case .warning:
+            print("warning: \(message)")
+        case .error:
+            print("error: \(message)", to: &standardError)
         }
     }
 }

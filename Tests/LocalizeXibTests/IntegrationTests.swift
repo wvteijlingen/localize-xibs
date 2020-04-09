@@ -4,10 +4,10 @@ import PathKit
 final class IntegrationTests: XCTestCase {
     static var allTests = [
         ("test_happyPath", test_happyPath),
-        ("test_noInputFiles_printsError", test_noInputFiles_printsError),
-        ("test_noStrictArgument_printsWarnings", test_noStrictArgument_printsWarnings),
-        ("test_strictArgument_printsErrors", test_strictArgument_printsErrors),
-        ("test_noLocalizableFiles_printsError", test_noLocalizableFiles_printsError)
+        ("test_noInputFiles_printsErrorToStrErr", test_noInputFiles_printsErrorToStrErr),
+        ("test_noStrictArgument_printsWarningsToStdOut", test_noStrictArgument_printsWarningsToStdOut),
+        ("test_strictArgument_printsErrorsToStdErr", test_strictArgument_printsErrorsToStdErr),
+        ("test_noLocalizableFiles_printsWarningToStdOut", test_noLocalizableFiles_printsWarningToStdOut)
     ]
 
     /// Returns the path to the built products directory.
@@ -82,27 +82,27 @@ final class IntegrationTests: XCTestCase {
         )
     }
 
-    func test_noLocalizableFiles_printsError() throws {
+    func test_noLocalizableFiles_printsWarningToStdOut() throws {
         let output = try run(
             args: ["./en.lproj/Localizable.strings"],
             pwd: uniqueTestDirectory(withFixtures: false).string
         )
-        XCTAssertEqual(output.stderr, "Error: No localizable XIBs or Storyboards were found. Make sure you use Base Internationalization and your XIBs and Storyboards are located in Base.lproj directories.\n")
+        XCTAssertEqual(output.stdout, "warning: No localizable XIBs or Storyboards were found. Make sure you use Base Internationalization and your XIBs and Storyboards are located in Base.lproj directories.\n")
     }
 
-    func test_noInputFiles_printsError() throws {
+    func test_noInputFiles_printsErrorToStrErr() throws {
         let output = try run(pwd: uniqueTestDirectory(withFixtures: false).string)
-        XCTAssertEqual(output.stderr, "Error: No input files specified. Run localize-xib -h for usage.\n")
+        XCTAssert(output.stderr.contains("Error: No input files specified"))
     }
 
-    func test_noStrictArgument_printsWarnings() throws {
+    func test_noStrictArgument_printsWarningsToStdOut() throws {
         let output = try run(args: ["./en.lproj/NoSuchFile.strings"], pwd:  uniqueTestDirectory(withFixtures: true).string)
         XCTAssertTrue(output.stdout.contains("warning: The file ./en.lproj/NoSuchFile.strings could not be loaded."))
     }
 
-    func test_strictArgument_printsErrors() throws {
+    func test_strictArgument_printsErrorsToStdErr() throws {
         let output = try run(args: ["./en.lproj/NoSuchFile.strings", "--strict"], pwd:  uniqueTestDirectory(withFixtures: true).string)
-        XCTAssertTrue(output.stdout.contains("error: The file ./en.lproj/NoSuchFile.strings could not be loaded."))
+        XCTAssertTrue(output.stderr.contains("error: The file ./en.lproj/NoSuchFile.strings could not be loaded."))
     }
 
     @discardableResult

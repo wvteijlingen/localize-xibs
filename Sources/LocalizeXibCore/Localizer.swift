@@ -2,35 +2,40 @@ import Foundation
 import Rainbow
 
 public struct Localizer {
+    public typealias Logger = (_ message: String, _ level: LogLevel) -> Void
+    public enum LogLevel {
+        case verbose, info, warning, error
+    }
+
     let translationFiles: Set<String>
     let interfaceBuilderFiles: Set<String>
     private let fileSystem: FileSystem = DefaultFileSystem()
+    private let logger: Logger?
 
-    public init(translationFiles: Set<String>, interfaceBuilderFiles: Set<String>) {
+    public init(translationFiles: Set<String>, interfaceBuilderFiles: Set<String>, logger: Logger?) {
         self.translationFiles = translationFiles
         self.interfaceBuilderFiles = interfaceBuilderFiles
+        self.logger = logger
     }
 
     @discardableResult
     public func localize(strict: Bool = false, verbose: Bool = false) -> Bool {
         var success = true
 
-        let logError = { (error: Swift.Error) in
-            let prefix: String
+        let handleError = { (error: Swift.Error) in
             if strict {
                 success = false
-                prefix = "error".red
+                self.logger?(error.localizedDescription, .error)
             } else {
-                prefix = "warning".yellow
+                self.logger?(error.localizedDescription, .warning)
             }
-            print("\(prefix): \(error.localizedDescription)")
         }
 
         let translationSources = translationFiles.compactMap { (filePath) -> StringsFile? in
             do {
                 return try StringsFile(filePath: filePath, fileSystem: fileSystem)
             } catch {
-                logError(error)
+                handleError(error)
             }
             return nil
         }
@@ -40,15 +45,15 @@ public struct Localizer {
         }
 
         for source in translationSources {
-            print("Found \(source.language.blue) translations at \(source.filePath.blue)")
+            logger?("Found \(source.language.blue) translations at \(source.filePath.blue)", .info)
 
             for xib in xibs {
                 guard let outputFile = xib.stringsFile(forLocale: source.locale) else { continue }
 
                 if verbose {
-                    print("Updating \(outputFile.filePath.green) with translations from \(source.filePath)")
+                    logger?("Updating \(outputFile.filePath.green) with translations from \(source.filePath)", .verbose)
                 } else {
-                    print("Updating \(xib.nameAndExtension.green)")
+                    logger?("Updating \(xib.nameAndExtension.green)", .info)
                 }
 
                 DefaultShell.run("ibtool \(xib.filePath) --generate-strings-file \(outputFile.filePath)", printCommand: verbose)
@@ -57,16 +62,16 @@ public struct Localizer {
                     let result = try outputFile.update(withReplacements: source.keysAndValues())
 
                     for key in result.unknownKeys {
-                        logError(Error.unknownTranslation(key))
+                        handleError(Error.unknownTranslation(key))
                     }
 
                     if verbose {
                         for (key, value) in result.replacedKeys {
-                            print("Translated \"\(key)\" with \"\(value)\"")
+                            logger?("Translated \"\(key)\" with \"\(value)\"", .verbose)
                         }
                     }
                 } catch {
-                    logError(error)
+                    handleError(error)
                 }
             }
         }
