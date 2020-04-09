@@ -61,7 +61,7 @@ struct InterfaceBuilderFile: LocalizedFile {
     let fileSystem: FileSystem
 
     init(filePath: String, fileSystem: FileSystem) throws {
-        guard filePath.fileURL.deletingLastPathComponent().lastPathComponent.hasSuffix(".lproj") else {
+        guard isLocalizedFile(filePath: filePath) else {
             throw Error.fileNotLocalized(filePath: filePath)
         }
         self.filePath = filePath
@@ -93,7 +93,7 @@ struct StringsFile: LocalizedFile {
     let fileSystem: FileSystem
 
     init(filePath: String, fileSystem: FileSystem) throws {
-        guard filePath.fileURL.deletingLastPathComponent().lastPathComponent.hasSuffix(".lproj") else {
+        guard isLocalizedFile(filePath: filePath) else {
             throw Error.fileNotLocalized(filePath: filePath)
         }
         self.filePath = filePath
@@ -104,8 +104,11 @@ struct StringsFile: LocalizedFile {
     /// - Throws: Error.invalidFileFormat
     /// - Returns: All keys and values
     func keysAndValues() throws -> [String: String] {
-        let data = try fileSystem.contents(ofFile: filePath)
-        let plist = try PropertyListSerialization.propertyList(from: data.data(using: .utf8)!, format: nil)
+        guard let data = fileSystem.contents(ofFile: filePath) else {
+            throw Error.invalidFileFormat(filePath: filePath)
+        }
+
+        let plist = try PropertyListSerialization.propertyList(from: data, format: nil)
 
         guard let dict = plist as? [String: String] else {
           throw Error.invalidFileFormat(filePath: filePath)
@@ -154,4 +157,8 @@ struct UpdateResult {
     mutating func registerReplacedKey(_ key: String, value: String) {
         replacedKeys[key] = value
     }
+}
+
+private func isLocalizedFile(filePath: String) -> Bool {
+    filePath.fileURL.deletingLastPathComponent().lastPathComponent.hasSuffix(".lproj")
 }

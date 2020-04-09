@@ -1,7 +1,6 @@
 import Foundation
 import ArgumentParser
 import LocalizeXibCore
-import PathKit
 
 public enum Error: Swift.Error, LocalizedError {
     case generic
@@ -37,13 +36,14 @@ struct Localize: ParsableCommand {
     }
 
     func run() throws {
-        let interfaceBuilderFiles = Path.glob(".{,**}/Base.lproj/*.{xib,storyboard}").map(\.string)
+        let glob = Glob(pattern: "./**/Base.lproj/*.{xib,storyboard}")
+        let interfaceBuilderFiles = Set(glob.paths)
 
         guard !interfaceBuilderFiles.isEmpty else {
             throw Error.noLocalizableFilesFound
         }
 
-        let localizer = Localizer(translationFiles: inputFiles, interfaceBuilderFiles: interfaceBuilderFiles)
+        let localizer = Localizer(translationFiles: Set(inputFiles), interfaceBuilderFiles: interfaceBuilderFiles)
         let success = localizer.localize(strict: strict, verbose: verbose)
 
         if !success {

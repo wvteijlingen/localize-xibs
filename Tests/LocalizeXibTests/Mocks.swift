@@ -1,5 +1,5 @@
 @testable import LocalizeXibCore
-import class Foundation.NSError
+import Foundation
 
 class MockFileSystem: FileSystem {
     var files: [String: String] = [:]
@@ -8,11 +8,9 @@ class MockFileSystem: FileSystem {
         files[path] != nil
     }
 
-    func contents(ofFile path: String) throws -> String {
-        guard let contents = files[path] else {
-            throw NSError(domain: "", code: 999, userInfo: nil)
-        }
-        return contents
+    func contents(ofFile path: String) -> Data? {
+        guard let contents = files[path] else { return nil }
+        return contents.data(using: .utf8)
     }
 
     func write(_ string: String, to filePath: String) throws {

@@ -2,11 +2,11 @@ import Foundation
 import Rainbow
 
 public struct Localizer {
-    let translationFiles: [String]
-    let interfaceBuilderFiles: [String]
+    let translationFiles: Set<String>
+    let interfaceBuilderFiles: Set<String>
     private let fileSystem: FileSystem = DefaultFileSystem()
 
-    public init(translationFiles: [String], interfaceBuilderFiles: [String]) {
+    public init(translationFiles: Set<String>, interfaceBuilderFiles: Set<String>) {
         self.translationFiles = translationFiles
         self.interfaceBuilderFiles = interfaceBuilderFiles
     }

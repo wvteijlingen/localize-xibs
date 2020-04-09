@@ -62,6 +62,24 @@ final class IntegrationTests: XCTestCase {
             "pAx-Te-oS9.normalTitle" = "Rare \\" karakters \\ \\n";
             """
         )
+
+        XCTAssertEqual(
+            try String(contentsOfFile: (testDirectory + "Subdirectory/en.lproj/Main.strings").string),
+            """
+            "TTJ-tj-MN7.normalTitle" = "This is the button title";
+            "bcg-Rc-DAi.text" = "Welcome to localize-xibs";
+            "pAx-Te-oS9.normalTitle" = "Weird \\" characters \\ \\n";
+            """
+        )
+
+        XCTAssertEqual(
+            try String(contentsOfFile: (testDirectory + "Subdirectory/nl.lproj/Main.strings").string),
+            """
+            "TTJ-tj-MN7.normalTitle" = "De is de knoptitel";
+            "bcg-Rc-DAi.text" = "Welkom bij localize-xibs";
+            "pAx-Te-oS9.normalTitle" = "Rare \\" karakters \\ \\n";
+            """
+        )
     }
 
     func test_noLocalizableFiles_printsError() throws {
@@ -79,12 +97,12 @@ final class IntegrationTests: XCTestCase {
 
     func test_noStrictArgument_printsWarnings() throws {
         let output = try run(args: ["./en.lproj/NoSuchFile.strings"], pwd:  uniqueTestDirectory(withFixtures: true).string)
-        XCTAssertTrue(output.stdout.contains("warning: The file “NoSuchFile.strings” couldn’t be opened because there is no such file"))
+        XCTAssertTrue(output.stdout.contains("warning: The file ./en.lproj/NoSuchFile.strings could not be loaded."))
     }
 
     func test_strictArgument_printsErrors() throws {
         let output = try run(args: ["./en.lproj/NoSuchFile.strings", "--strict"], pwd:  uniqueTestDirectory(withFixtures: true).string)
-        XCTAssertTrue(output.stdout.contains("error: The file “NoSuchFile.strings” couldn’t be opened because there is no such file"))
+        XCTAssertTrue(output.stdout.contains("error: The file ./en.lproj/NoSuchFile.strings could not be loaded."))
     }
 
     @discardableResult

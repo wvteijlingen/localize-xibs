@@ -19,8 +19,7 @@ let package = Package(
             name: "LocalizeXibCore",
             dependencies: [
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
-                "PathKit",
-                "Rainbow"
+                "Rainbow",
             ]
         ),
         .target(

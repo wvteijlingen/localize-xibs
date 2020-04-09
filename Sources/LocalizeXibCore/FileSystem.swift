@@ -1,10 +1,8 @@
-import class Foundation.FileManager
-import struct Foundation.URL
-import PathKit
+import Foundation
 
 protocol FileSystem {
     func fileExists(atPath: String) -> Bool
-    func contents(ofFile: String) throws -> String
+    func contents(ofFile: String) -> Data?
     func write(_ string: String, to: String) throws
 }
 
@@ -13,8 +11,8 @@ struct DefaultFileSystem: FileSystem {
         FileManager.default.fileExists(atPath: path)
     }
 
-    func contents(ofFile file: String) throws -> String {
-        try String(contentsOfFile: file)
+    func contents(ofFile file: String) -> Data? {
+        FileManager.default.contents(atPath: file)
     }
 
     func write(_ string: String, to filePath: String) throws {
