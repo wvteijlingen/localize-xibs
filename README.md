@@ -67,3 +67,24 @@ localize-xibs [--strict] [--verbose] [<input-files> ...]
 
 - `--strict`: Treat warnings as errors.
 - `--verbose`: Display extra information while processing.
+
+## Programmatic usage
+
+You can also use the `LocalizeXib.Localizer` class directly from your code as follows:
+
+```
+import LocalizeXibCore
+
+let translationFiles: Set<String> = [
+  "MyProject/Resources/en.lproj/Localizable.strings",
+  "MyProject/Resources/de.lproj/Localizable.strings"
+]
+
+let interfaceBuilderFiles: Set<String> = [
+  "MyProject/Main.storyboard",
+  "MyProject/SomeViewController.xib",
+]
+
+let localizer = Localizer(translationFiles: Set(inputFiles), interfaceBuilderFiles: interfaceBuilderFiles, logger: nil)
+let success = localizer.localize(strict: false, verbose: false)
+```
