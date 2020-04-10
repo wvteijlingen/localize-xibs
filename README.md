@@ -8,6 +8,7 @@
   • <a href="#usage">Usage</a>
   • <a href="#usage-as-an-xcode-run-script">Usage as an Xcode Run Script</a>
   • <a href="#command-line-api">Command line API</a>
+  • <a href="#programmatic-api">Programmatic API</a>
 </p>
 
 # LocalizeXIBs
@@ -68,9 +69,9 @@ localize-xibs [--strict] [--verbose] [<input-files> ...]
 - `--strict`: Treat warnings as errors.
 - `--verbose`: Display extra information while processing.
 
-## Programmatic usage
+## Programmatic API
 
-You can also use the `LocalizeXib.Localizer` class directly from your code as follows:
+You can also programmatically use the `localize-xibs` package as follows:
 
 ```
 import LocalizeXibCore
