@@ -8,7 +8,8 @@ final class IntegrationTests: XCTestCase {
         ("test_strictArgument_printsErrorsToStdErr", test_strictArgument_printsErrorsToStdErr),
         ("test_noLocalizableFiles_printsWarningToStdOut", test_noLocalizableFiles_printsWarningToStdOut),
         ("test_missingTranslation_printsWarningToStdErr", test_missingTranslation_printsWarningToStdErr),
-        ("test_missingTranslationInStrictMode_printsErrorToStdErr", test_missingTranslationInStrictMode_printsErrorToStdErr)
+        ("test_missingTranslationInStrictMode_printsErrorToStdErr", test_missingTranslationInStrictMode_printsErrorToStdErr),
+        ("test_verboseArgument_printsTranslationsToStdOut", test_verboseArgument_printsTranslationsToStdOut)
     ]
 
     /// Returns the path to the built products directory.
@@ -138,6 +139,16 @@ final class IntegrationTests: XCTestCase {
         )
 
         XCTAssertTrue(output.stderr.contains("error: Unknown translation for \"missing_translation\""))
+    }
+
+    func test_verboseArgument_printsTranslationsToStdOut() throws {
+        let testDirectory = uniqueTestDirectory(withFixtures: true)
+        let output = try run(
+            args: ["./en.lproj/Localizable.strings", "--verbose"],
+            pwd: testDirectory.path
+        )
+
+        XCTAssertTrue(output.stdout.contains("Translated \"title\" with \"Welcome to localize-xibs\""))
     }
 
     @discardableResult
