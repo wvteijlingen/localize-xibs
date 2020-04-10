@@ -9,7 +9,8 @@ final class IntegrationTests: XCTestCase {
         ("test_noLocalizableFiles_printsWarningToStdOut", test_noLocalizableFiles_printsWarningToStdOut),
         ("test_missingTranslation_printsWarningToStdErr", test_missingTranslation_printsWarningToStdErr),
         ("test_missingTranslationInStrictMode_printsErrorToStdErr", test_missingTranslationInStrictMode_printsErrorToStdErr),
-        ("test_verboseArgument_printsTranslationsToStdOut", test_verboseArgument_printsTranslationsToStdOut)
+        ("test_verboseArgument_printsTranslationsToStdOut", test_verboseArgument_printsTranslationsToStdOut),
+        ("test_unlocalizedFiles_printsWarningToStdOut", test_unlocalizedFiles_printsWarningToStdOut)
     ]
 
     /// Returns the path to the built products directory.
@@ -149,6 +150,16 @@ final class IntegrationTests: XCTestCase {
         )
 
         XCTAssertTrue(output.stdout.contains("Translated \"title\" with \"Welcome to localize-xibs\""))
+    }
+
+    func test_unlocalizedTransationFile_printsWarningToStdOut() throws {
+        let testDirectory = uniqueTestDirectory(withFixtures: true)
+        let output = try run(
+            args: ["./Localizable.strings"],
+            pwd: testDirectory.path
+        )
+
+        XCTAssertTrue(output.stdout.contains("The file ./Localizable.strings is not located in an *.lproj directory."))
     }
 
     @discardableResult
