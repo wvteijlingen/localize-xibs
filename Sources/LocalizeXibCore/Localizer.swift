@@ -7,19 +7,36 @@ public struct Localizer {
         case verbose, info, warning, error
     }
 
+    /// File paths to `.strings` files containing translations.
     let translationFiles: Set<String>
+
+    /// File paths to `.xib` or `.storyboard` files that should be localized.
     let interfaceBuilderFiles: Set<String>
+
     private let fileSystem: FileSystem = DefaultFileSystem()
     private let logger: Logger?
 
-    public init(translationFiles: Set<String>, interfaceBuilderFiles: Set<String>, logger: Logger?) {
+    /// Initializes a new localizer.
+    /// - Parameters:
+    ///   - translationFiles: File paths to `.strings` files containing translations.
+    ///                       Each of these files should be located directly in an *.lproj directory.
+    ///   - interfaceBuilderFiles: File paths to `.xib` or `.storyboard` files that should be localized.
+    ///   - logger: Optional logger.
+    public init(translationFiles: Set<String>, interfaceBuilderFiles: Set<String>, logger: Logger? = nil) {
         self.translationFiles = translationFiles
         self.interfaceBuilderFiles = interfaceBuilderFiles
         self.logger = logger
     }
 
-    @discardableResult
-    public func localize(strict: Bool = false, verbose: Bool = false) -> Bool {
+    /// Perform the localization.
+    /// Errors that occur during the localization process will not be thrown, but instead logged
+    /// to the logger.
+    ///
+    /// - Parameters:
+    ///   - strict: Set to true to treat warnings as errors
+    ///   - verbose: Set to tru to log extra information while processing
+    /// - Returns: True if no errors occured, false otherwise.
+    @discardableResult public func localize(strict: Bool = false, verbose: Bool = false) -> Bool {
         var success = true
 
         let handleError = { (error: Swift.Error) in
@@ -56,7 +73,7 @@ public struct Localizer {
                     logger?("Updating \(xib.nameAndExtension.green)", .info)
                 }
 
-                DefaultShell.run("ibtool \(xib.filePath) --generate-strings-file \(outputFile.filePath)", printCommand: verbose)
+                DefaultShell.run("ibtool \(xib.filePath) --generate-strings-file \(outputFile.filePath)", logger: logger)
 
                 do {
                     let result = try outputFile.update(withReplacements: source.keysAndValues())
