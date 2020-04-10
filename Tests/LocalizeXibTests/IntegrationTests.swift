@@ -7,7 +7,8 @@ final class IntegrationTests: XCTestCase {
         ("test_noStrictArgument_printsWarningsToStdOut", test_noStrictArgument_printsWarningsToStdOut),
         ("test_strictArgument_printsErrorsToStdErr", test_strictArgument_printsErrorsToStdErr),
         ("test_noLocalizableFiles_printsWarningToStdOut", test_noLocalizableFiles_printsWarningToStdOut),
-        ("test_missingTranslation_printsWarningToStdErr", test_missingTranslation_printsWarningToStdErr)
+        ("test_missingTranslation_printsWarningToStdErr", test_missingTranslation_printsWarningToStdErr),
+        ("test_missingTranslationInStrictMode_printsErrorToStdErr", test_missingTranslationInStrictMode_printsErrorToStdErr)
     ]
 
     /// Returns the path to the built products directory.
@@ -127,6 +128,16 @@ final class IntegrationTests: XCTestCase {
         )
 
         XCTAssertTrue(output.stdout.contains("warning: Unknown translation for \"missing_translation\""))
+    }
+
+    func test_missingTranslationInStrictMode_printsErrorToStdErr() throws {
+        let testDirectory = uniqueTestDirectory(withFixtures: true)
+        let output = try run(
+            args: ["./en.lproj/Localizable.strings", "./nl.lproj/Localizable.strings", "--strict"],
+            pwd: testDirectory.path
+        )
+
+        XCTAssertTrue(output.stderr.contains("error: Unknown translation for \"missing_translation\""))
     }
 
     @discardableResult
