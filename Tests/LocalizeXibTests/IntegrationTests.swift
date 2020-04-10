@@ -10,7 +10,8 @@ final class IntegrationTests: XCTestCase {
         ("test_missingTranslation_printsWarningToStdErr", test_missingTranslation_printsWarningToStdErr),
         ("test_missingTranslationInStrictMode_printsErrorToStdErr", test_missingTranslationInStrictMode_printsErrorToStdErr),
         ("test_verboseArgument_printsTranslationsToStdOut", test_verboseArgument_printsTranslationsToStdOut),
-        ("test_unlocalizedTranslationFile_printsWarningToStdOut", test_unlocalizedTranslationFile_printsWarningToStdOut)
+        ("test_unlocalizedTranslationFile_printsWarningToStdOut", test_unlocalizedTranslationFile_printsWarningToStdOut),
+        ("test_invalidTranslationFile_printsWarningToStdOut", test_invalidTranslationFile_printsWarningToStdOut)
     ]
 
     /// Returns the path to the built products directory.
@@ -160,6 +161,15 @@ final class IntegrationTests: XCTestCase {
         )
 
         XCTAssertTrue(output.stdout.contains("The file ./Localizable.strings is not located in an *.lproj directory."))
+    }
+
+    func test_invalidTranslationFile_printsWarningToStdOut() throws {
+        let testDirectory = uniqueTestDirectory(withFixtures: true)
+        let output = try run(
+            args: ["./en.lproj/Invalid.plist"],
+            pwd: testDirectory.path
+        )
+        XCTAssertTrue(output.stdout.contains("The file ./en.lproj/Invalid.plist could not be loaded"))
     }
 
     @discardableResult
