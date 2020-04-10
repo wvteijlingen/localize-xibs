@@ -12,7 +12,7 @@
 
 # LocalizeXIBs
 
-LocalizeXIBs takes the pain out of localizing XIBs and Storyboards, by allowing you to **reference translations directly from Interface Builder**. This means no more dealing with `.strings` files that get out of sync, Object IDs, and missing translations.
+LocalizeXIBs takes the pain out of localizing XIBs and Storyboards, by allowing you to **reference translations directly from Interface Builder** and resolving them at build time. This means no more dealing with multiple `.strings` files that get out of sync, Object IDs, or missing translations at runtime.
 
 **It offers the following benefits**
 
