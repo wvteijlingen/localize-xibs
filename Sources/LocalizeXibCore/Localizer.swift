@@ -36,8 +36,8 @@ public struct Localizer {
                 return try StringsFile(filePath: filePath, fileSystem: fileSystem)
             } catch {
                 handleError(error)
+                return nil
             }
-            return nil
         }
 
         let xibs = interfaceBuilderFiles.compactMap {
