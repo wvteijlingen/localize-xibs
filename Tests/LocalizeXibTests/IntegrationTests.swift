@@ -6,7 +6,8 @@ final class IntegrationTests: XCTestCase {
         ("test_noInputFiles_printsErrorToStrErr", test_noInputFiles_printsErrorToStrErr),
         ("test_noStrictArgument_printsWarningsToStdOut", test_noStrictArgument_printsWarningsToStdOut),
         ("test_strictArgument_printsErrorsToStdErr", test_strictArgument_printsErrorsToStdErr),
-        ("test_noLocalizableFiles_printsWarningToStdOut", test_noLocalizableFiles_printsWarningToStdOut)
+        ("test_noLocalizableFiles_printsWarningToStdOut", test_noLocalizableFiles_printsWarningToStdOut),
+        ("test_missingTranslation_printsWarningToStdErr", test_missingTranslation_printsWarningToStdErr)
     ]
 
     /// Returns the path to the built products directory.
@@ -60,6 +61,7 @@ final class IntegrationTests: XCTestCase {
             "TTJ-tj-MN7.normalTitle" = "This is the button title";
             "bcg-Rc-DAi.text" = "Welcome to localize-xibs";
             "pAx-Te-oS9.normalTitle" = "Weird \\" characters \\ \\n";
+            "wxy-TL-Rt3.normalTitle" = "__missing_translation__";
             """
         )
 
@@ -69,6 +71,7 @@ final class IntegrationTests: XCTestCase {
             "TTJ-tj-MN7.normalTitle" = "De is de knoptitel";
             "bcg-Rc-DAi.text" = "Welkom bij localize-xibs";
             "pAx-Te-oS9.normalTitle" = "Rare \\" karakters \\ \\n";
+            "wxy-TL-Rt3.normalTitle" = "__missing_translation__";
             """
         )
 
@@ -78,6 +81,7 @@ final class IntegrationTests: XCTestCase {
             "TTJ-tj-MN7.normalTitle" = "This is the button title";
             "bcg-Rc-DAi.text" = "Welcome to localize-xibs";
             "pAx-Te-oS9.normalTitle" = "Weird \\" characters \\ \\n";
+            "wxy-TL-Rt3.normalTitle" = "__missing_translation__";
             """
         )
 
@@ -87,6 +91,7 @@ final class IntegrationTests: XCTestCase {
             "TTJ-tj-MN7.normalTitle" = "De is de knoptitel";
             "bcg-Rc-DAi.text" = "Welkom bij localize-xibs";
             "pAx-Te-oS9.normalTitle" = "Rare \\" karakters \\ \\n";
+            "wxy-TL-Rt3.normalTitle" = "__missing_translation__";
             """
         )
     }
@@ -112,6 +117,16 @@ final class IntegrationTests: XCTestCase {
     func test_strictArgument_printsErrorsToStdErr() throws {
         let output = try run(args: ["./en.lproj/NoSuchFile.strings", "--strict"], pwd:  uniqueTestDirectory(withFixtures: true).path)
         XCTAssertTrue(output.stderr.contains("error: The file ./en.lproj/NoSuchFile.strings could not be loaded."))
+    }
+
+    func test_missingTranslation_printsWarningToStdErr() throws {
+        let testDirectory = uniqueTestDirectory(withFixtures: true)
+        let output = try run(
+            args: ["./en.lproj/Localizable.strings", "./nl.lproj/Localizable.strings"],
+            pwd: testDirectory.path
+        )
+
+        XCTAssertTrue(output.stdout.contains("warning: Unknown translation for \"missing_translation\""))
     }
 
     @discardableResult
