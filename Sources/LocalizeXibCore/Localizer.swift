@@ -73,7 +73,7 @@ public struct Localizer {
                     logger?("Updating \(xib.nameAndExtension.green)", .info)
                 }
 
-                DefaultShell.run("ibtool \(xib.filePath) --generate-strings-file \(outputFile.filePath)", logger: logger)
+                DefaultShell.run("ibtool \"\(xib.filePath)\" --generate-strings-file \"\(outputFile.filePath)\"", logger: logger)
 
                 do {
                     let result = try outputFile.update(withReplacements: source.keysAndValues())
